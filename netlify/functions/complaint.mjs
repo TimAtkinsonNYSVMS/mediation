@@ -1,9 +1,9 @@
-// GET /api/complaint?id=rec… and POST /api/complaint/<action> · v01 (2026-11-04)
+// GET /api/complaint?id=rec… and POST /api/complaint/<action> · v02 (2026-11-04). v02: every action is refused while viewing as someone.
 // Actions: update (log progress, optionally a drafted letter), status, resolution, assign, feedback.
 // Every check is in access.mjs (viewOf, can, statusAllowed); this file only applies the change.
 import { body, checkPost, json } from "../lib/core.mjs";
 import { readOne, create, update } from "../lib/airtable.mjs";
-import { requirePerson, viewOf, can, statusAllowed, facilitators } from "../lib/access.mjs";
+import { requirePerson, viewOf, can, statusAllowed, facilitators, refuseIfViewing } from "../lib/access.mjs";
 import { detail, noticeAssigned, noticeUpdate, noticeStatus, noticeFeedback } from "../lib/complaints.mjs";
 
 const NOT_FOUND = json({ error: "That request was not found." }, 404);
@@ -23,7 +23,7 @@ export default async (req) => {
       return json(await detail(me, c));
     }
 
-    const bad = checkPost(req);
+    const bad = checkPost(req) || refuseIfViewing(me);
     if (bad) return bad;
     const b = await body(req);
     const c = await readOne("complaints", b.id);

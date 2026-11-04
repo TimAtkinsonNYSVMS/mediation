@@ -1,4 +1,5 @@
-// Mediation portal app v01 (2026-11-04). Plain JS, hash routes:
+// Mediation portal app v02 (2026-11-04). v02: Admin page (#/admin, staff) and View as (read-only, 2 hours).
+// v01 (2026-11-04). Plain JS, hash routes:
 //   #/ (home: public about page, or the signed-in person's lists)   #/file (public complaint form)   #/signin
 //   #/c/<id> (one complaint)   #/c/<id>/letter (draft a letter)   #/feedback/<id>   #/facilitators   #/letters   #/guide
 // All data comes from /api; every element is built with textContent, never HTML strings.
@@ -66,17 +67,21 @@ function tabsFor() {
   if (!me) return [["#/", "About"], ["#/file", "Request mediation"], ["#/signin", "Sign in"]];
   const t = [];
   if (me.staff) t.push(["#/", "All requests"], ["#/facilitators", "Facilitators"], ["#/letters", "Letter templates"]);
+  else if (me.viewing && !me.facilitator && !me.owner) t.push(["#/", "Home"]);
   else if (me.facilitator) t.push(["#/", "My assignments"], ["#/guide", "Facilitator guide"]);
   else t.push(["#/", "My requests"]);
+  if (me.real && me.real.staff && !me.viewing) t.push(["#/admin", "Admin"]);
   return t;
 }
 function renderHeader() {
   const who = $("who");
   who.replaceChildren();
+  viewBar();
   if (me) {
-    const role = me.staff ? "Staff" : me.facilitator ? "Facilitator" : "Pet owner";
-    who.append(el("span", { class: "pill", text: role }), el("span", { class: "name", text: me.name }),
-      el("button", { class: "btn-on-dark", type: "button", text: "Sign out", onclick: async () => { await post("/api/auth/logout").catch(() => {}); me = null; location.hash = "#/"; renderHeader(); route(); } }));
+    const role = me.staff ? "Staff" : me.facilitator ? "Facilitator" : me.owner ? "Pet owner" : "No access";
+    who.append(...[el("span", { class: "pill", text: role }), el("span", { class: "name", text: me.name }),
+      me.viewing ? el("span", { class: "name small", text: `(you are ${me.real.name})` }) : null,
+      el("button", { class: "btn-on-dark", type: "button", text: "Sign out", onclick: async () => { await post("/api/auth/logout").catch(() => {}); me = null; location.hash = "#/"; renderHeader(); route(); } })].filter(Boolean));
   }
   const cur = location.hash.split("/").slice(0, 2).join("/") || "#/";
   $("tabs").replaceChildren(...tabsFor().map(([h, l]) => el("a", { href: h, text: l, "aria-current": (h === "#/" ? ["#/", "#", "#/c"].includes(cur) : cur === h) ? "page" : false })));
@@ -90,13 +95,14 @@ async function route() {
     if (parts[0] === "file") return fileForm();
     if (parts[0] === "signin") return signIn();
     if (!me) return about();
-    if (parts[0] === "c" && parts[2] === "letter") return letter(parts[1]);
-    if (parts[0] === "c") return complaint(parts[1]);
-    if (parts[0] === "feedback") return feedback(parts[1]);
-    if (parts[0] === "facilitators") return facilitatorList();
-    if (parts[0] === "letters") return letterList();
+    if (parts[0] === "c" && parts[2] === "letter") return await letter(parts[1]);
+    if (parts[0] === "c") return await complaint(parts[1]);
+    if (parts[0] === "feedback") return await feedback(parts[1]);
+    if (parts[0] === "facilitators") return await facilitatorList();
+    if (parts[0] === "letters") return await letterList();
     if (parts[0] === "guide") return guide();
-    return home();
+    if (parts[0] === "admin") return await admin();
+    return await home();
   } catch (e) {
     if (e.message !== "Please sign in.") show(el("div", { class: "err", text: e.message }));
   }
@@ -193,6 +199,7 @@ let filter = "open";
 async function home() {
   const { mine, work } = await api("/api/complaints");
   const parts = [];
+  if (me.viewing && !me.viewing.can_sign_in) parts.push(el("div", { class: "note", text: `${me.name} can't sign in to the portal: they aren't an active facilitator or staff member, and they don't own a request. If they tried, they would only see the public pages.` }));
   if (me.staff || me.facilitator) {
     const open = work.filter((c) => !CLOSED.includes(c.status));
     parts.push(el("p", { class: "eyebrow", text: me.staff ? "Staff" : "Facilitator" }), el("h1", { text: me.staff ? "All requests" : "My assignments" }));
@@ -418,6 +425,98 @@ function guide() {
       el("li", { text: "Log each call or email as an update so staff can see where things stand, and keep the status current." }),
       el("li", { text: "When it's resolved, record the resolution, set the status to Completed and send the two resolution letters. The owner's letter includes a feedback link." })),
     el("p", {}, "Questions? Email ", el("a", { href: "mailto:staff@nysvms.org", text: "staff@nysvms.org" }), "."));
+}
+
+// ---- View as ----
+function viewBar() {
+  let bar = $("viewbar");
+  if (!me || !me.viewing) { if (bar) bar.remove(); return; }
+  if (!bar) { bar = el("div", { id: "viewbar", class: "viewbar" }); document.body.prepend(bar); }
+  const until = new Date(me.viewing.until).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+  bar.replaceChildren(el("div", { class: "in viewbar-in" },
+    el("span", {}, el("strong", { text: `Viewing as ${me.viewing.name}.` }), ` Changes are switched off. Ends at ${until}.`),
+    el("button", { type: "button", class: "btn-small", text: "Stop viewing", onclick: stopViewing })));
+}
+async function startViewing(p) {
+  try { await post("/api/view-as", { id: p.id }); me = await api("/api/auth/session"); location.hash = "#/"; route(); }
+  catch (err) { toast(err.message, true); }
+}
+async function stopViewing() {
+  await post("/api/view-as/stop").catch(() => {});
+  me = await api("/api/auth/session").catch(() => null);
+  location.hash = "#/admin"; route();
+}
+
+// ---- Admin (staff) ----
+let adminFilter = "everyone", adminQuery = "";
+async function admin() {
+  if (!me.real || !me.real.staff || me.viewing) { location.hash = "#/"; return; }
+  const { people, regions } = await api("/api/admin/people");
+  const FILTERS = [["everyone", "Everyone"], ["staff", "Staff"], ["facilitator", "Facilitators"], ["owner", "Pet owners"], ["inactive", "Inactive"]];
+  const count = (k) => people.filter((p) => match(p, k)).length;
+  const match = (p, k) => k === "everyone" || (k === "inactive" ? !p.active && (p.staff || p.facilitator) : p[k]);
+  const search = el("input", { id: "adm-q", type: "text", placeholder: "Search by name or email", value: adminQuery });
+  const list = el("div");
+  const bar = el("div", { class: "filters" }, FILTERS.map(([k, l]) => el("button", { type: "button", class: "fchip", "data-f": k, text: `${l} (${count(k)})`, onclick: () => { adminFilter = k; draw(); } })));
+  const draw = () => {
+    const q = adminQuery.trim().toLowerCase();
+    const rows = people.filter((p) => match(p, adminFilter) && (!q || p.name.toLowerCase().includes(q) || p.email.toLowerCase().includes(q)));
+    bar.querySelectorAll("button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.f === adminFilter)));
+    list.replaceChildren(rows.length ? el("div", { class: "tbl-wrap" }, el("table", {},
+      el("thead", {}, el("tr", {}, ["Name", "Roles", "Region", "Requests", ""].map((h) => el("th", { text: h })))),
+      el("tbody", {}, rows.slice(0, 300).map((p) => personRow(p, regions))))) : el("p", { class: "muted", text: "Nobody matches." }));
+  };
+  search.addEventListener("input", () => { adminQuery = search.value; draw(); });
+  show(el("p", { class: "eyebrow", text: "Staff" }), el("h1", { text: "Admin" }),
+    el("p", { class: "lede", text: "Everyone in the portal and what they can do. Pet owner is not a setting: it means the person owns at least one mediation request. Every change and every View as is recorded in the Admin Log table in Airtable." }),
+    el("div", { class: "row", style: "margin-bottom:12px" }, el("div", { style: "flex:1 1 280px" }, search), el("button", { class: "btn-outline", type: "button", text: "Add a person", onclick: () => editPerson(null, regions) })),
+    bar, list);
+  draw();
+}
+function roleChips(p) {
+  return [p.staff && el("span", { class: "chip info", text: "Staff" }), p.facilitator && el("span", { class: "chip ok", text: "Facilitator" }),
+    p.owner && el("span", { class: "chip neutral", text: "Pet owner" }), !p.active && (p.staff || p.facilitator) && el("span", { class: "chip bad", text: "Inactive" })].filter(Boolean);
+}
+function personRow(p, regions) {
+  return el("tr", {},
+    el("td", {}, el("strong", { text: p.name || "(no name)" }), el("div", { class: "small muted", text: p.email })),
+    el("td", {}, el("div", { class: "row", style: "gap:6px" }, roleChips(p))),
+    el("td", { text: p.region || "—" }),
+    el("td", { class: "num", text: p.total ? `${p.open} open · ${p.total}` : "—" }),
+    el("td", {}, el("div", { class: "row", style: "gap:6px;flex-wrap:nowrap" },
+      el("button", { class: "btn-small", type: "button", text: "Edit", onclick: () => editPerson(p, regions) }),
+      p.email.toLowerCase() !== me.email ? el("button", { class: "btn-small", type: "button", text: "View as", onclick: () => startViewing(p) }) : null)));
+}
+function editPerson(p, regions) {
+  const isNew = !p;
+  p = p || { name: "", email: "", staff: false, facilitator: true, active: true, region: "" };
+  const name = el("input", { id: "ed-name", type: "text", value: p.name });
+  const email = el("input", { id: "ed-email", type: "email", value: p.email, disabled: !isNew });
+  const box = (id, label, on) => el("div", { class: "check" }, el("input", { type: "checkbox", id, checked: on }), el("label", { for: id, text: label }));
+  const region = el("select", { id: "ed-region" }, el("option", { value: "", text: "No region" }), regions.map((r) => el("option", { value: r, text: r, selected: r === p.region })));
+  const msg = el("div");
+  const save = async () => {
+    msg.replaceChildren();
+    try {
+      await post("/api/admin/person", { id: isNew ? undefined : p.id, name: name.value, email: email.value, staff: $("ed-staff").checked, facilitator: $("ed-fac").checked, active: $("ed-active").checked, region: region.value });
+      toast(isNew ? "Person added" : "Saved"); route();
+    } catch (err) { msg.append(el("div", { class: "err", text: err.message })); }
+  };
+  show(el("a", { class: "btn-small", href: "#/admin", text: "← Admin", onclick: (e) => { e.preventDefault(); route(); } }),
+    el("p", { class: "eyebrow", style: "margin-top:14px", text: "Admin" }), el("h1", { text: isNew ? "Add a person" : p.name || p.email }),
+    el("div", { class: "panel", style: "max-width:560px" },
+      el("label", { for: "ed-name", text: "Name" }), name,
+      el("label", { for: "ed-email", text: "Email" }), email,
+      isNew ? el("p", { class: "hint", text: "They sign in with this email." }) : el("p", { class: "hint", text: "Email can't be changed here because it is how they sign in." }),
+      el("fieldset", { style: "margin-top:16px" }, el("legend", { text: "Roles" }),
+        box("ed-staff", "Staff: sees every request, assigns facilitators, uses this Admin page", p.staff),
+        box("ed-fac", "Facilitator: can be assigned requests and mediates them", p.facilitator),
+        box("ed-active", "Active: needed for Staff and Facilitator access", p.active)),
+      el("label", { for: "ed-region", text: "Region" }), region,
+      p.owner ? el("p", { class: "hint", text: "This person also owns at least one request, so they can always sign in to see their own." }) : null,
+      msg,
+      el("div", { class: "row", style: "margin-top:16px" }, el("button", { class: "btn", type: "button", text: isNew ? "Add person" : "Save", onclick: save }),
+        el("button", { class: "btn-outline", type: "button", text: "Cancel", onclick: () => route() }))));
 }
 
 // ---- start ----

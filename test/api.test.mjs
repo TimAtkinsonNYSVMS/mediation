@@ -42,8 +42,8 @@ test("people with no complaint, inactive facilitators and strangers get the same
 });
 
 test("the session reports roles from People", async () => {
-  assert.deepEqual(await (await get("auth-session", "/api/auth/session", EMAILS.staff)).json(), { email: EMAILS.staff, name: "Sam Staff", staff: true, facilitator: true, owner: false, admin: true });
-  assert.deepEqual(await (await get("auth-session", "/api/auth/session", EMAILS.fac)).json(), { email: EMAILS.fac, name: "Dr. Priya Raman", staff: false, facilitator: true, owner: false, admin: false });
+  assert.deepEqual(await (await get("auth-session", "/api/auth/session", EMAILS.staff)).json(), { email: EMAILS.staff, name: "Sam Staff", staff: true, facilitator: true, owner: false, admin: true, viewing: null, real: { name: "Sam Staff", staff: true } });
+  assert.deepEqual(await (await get("auth-session", "/api/auth/session", EMAILS.fac)).json(), { email: EMAILS.fac, name: "Dr. Priya Raman", staff: false, facilitator: true, owner: false, admin: false, viewing: null, real: { name: "Dr. Priya Raman", staff: false } });
   assert.equal((await get("auth-session", "/api/auth/session", EMAILS.inactive)).status, 401);
   assert.equal((await get("auth-session", "/api/auth/session")).status, 401);
 });

@@ -24,6 +24,9 @@ ysvms-mediation-portal`). GitHub: `TimAtkinsonNYSVMS/mediation` (private), branc
 - Tests: `npm test`.
 - Local server: `npm run dev` (port 8892, made-up data; sign in at /dev/as/staff, /dev/as/fac or /dev/as/owner).
 
+## Admin and View as
+Staff have an Admin page (`#/admin`, `netlify/functions/admin.mjs`): people, roles, and adding people. **View as** is read-only and lasts 2 hours. Every write endpoint calls `refuseIfViewing` (or uses `requireStaff`). Every change and every View as start and stop is written to the Admin Log table. The rules are in `docs/admin-and-view-as-spec.md`.
+
 ## Rules
 1. **Never deploy by uploading files to Netlify.** Every change goes through a commit to this repo.
 2. **Never put secrets, or any real complaint data, in code, tests, Drive or chat.** Tests use made-up data only. Don't paste owner or vet details into docs; refer to complaints by number.

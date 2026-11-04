@@ -39,6 +39,7 @@ export const RECORDS = {
     r(IDS.u1, { [U.n]: 600, [U.complaint]: [IDS.cMine], [U.author]: [IDS.fac], [U.date]: "2026-10-14T15:00:00.000Z", [U.notes]: "Called the owner and explained the process.", [U.letterType]: { name: "Introduce yourself to Animal Owner" } }),
     r(IDS.u2, { [U.n]: 601, [U.complaint]: [IDS.cMine], [U.author]: [IDS.fac], [U.date]: "2026-10-30T15:00:00.000Z", [U.notes]: "Vet on leave until Nov 6.", [U.docs]: [att("attDC0000000000001", "call-log.pdf")] })
   ],
+  tblBXzNsCIKILpPgR: [],
   tbloGcnfTRAu5niHD: [
     r("recTPL00000000001", { flddS63Z2Z3VePtf6: "Introduce yourself to Animal Owner", fldb2G8PeGIWb2asU: { name: "Owner" }, fldsGhPHEA7ozb2qw: "Your complaint about Dr. {vet_name}", fldLkj53XhzL9NcLM: "Dear {owner_name}, I am Dr. {facilitator_name}. {feedback_link}", fldcAeqUTpGRiUYBH: 1 }),
     r("recTPL00000000002", { flddS63Z2Z3VePtf6: "Introduce yourself to veterinarian", fldb2G8PeGIWb2asU: { name: "Veterinarian" }, fldsGhPHEA7ozb2qw: "A complaint from {owner_name}", fldLkj53XhzL9NcLM: "Dear {vet_name}, documents: {uploads_link}", fldcAeqUTpGRiUYBH: 2 }),
@@ -53,7 +54,7 @@ export const UPLOADS = [];
 export const MAIL_HOOK = "https://hook.example.test/mail";
 const CODES = "tblr6tAs6pjmTXVne";
 const PEOPLE = "tblMC3vdByJkY9jEC", COMPLAINTS = "tbl0FlFU8Xxn5UfK1", UPDATES = "tblzyvyYFymTo4xR6";
-const SELECTS = ["flduLBEGv02ch9cDn", "fldi7g5q1MalmVyla", "fldXUBbG7YL9cbK0f", "fldV2V8jO2Ncrnizz", "fldb2G8PeGIWb2asU"];
+const SELECTS = ["fldCeen1cs82bzow6", "flduLBEGv02ch9cDn", "fldi7g5q1MalmVyla", "fldXUBbG7YL9cbK0f", "fldV2V8jO2Ncrnizz", "fldb2G8PeGIWb2asU"];
 const ok = (b) => new Response(JSON.stringify(b), { status: 200, headers: { "content-type": "application/json" } });
 const clone = (x) => JSON.parse(JSON.stringify(x));
 const stored = (fields) => Object.fromEntries(Object.entries(fields).map(([k, v]) => [k, SELECTS.includes(k) && typeof v === "string" ? { name: v } : v]));

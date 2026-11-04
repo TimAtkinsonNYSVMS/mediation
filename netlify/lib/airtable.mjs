@@ -1,4 +1,5 @@
-// Mediation portal Airtable access v01 (2026-11-04). Field IDs, never names (see docs/airtable.md).
+// Mediation portal Airtable access v02 (2026-11-04). v02: Admin Log table; People "active" etc. used by the Admin page.
+// Was v01 (2026-11-04). Field IDs, never names (see docs/airtable.md).
 // Base "Complaints Mediation". People and Letter Templates are cached for 60 seconds per function instance;
 // Complaints and Progress Updates are always read fresh.
 import { env } from "./core.mjs";
@@ -35,6 +36,11 @@ export const TABLES = {
       fld8lFmpecZG7cdaQ: "n", fldj3FAAYKeGMKuhG: "complaint", fldvm1aIsRmvMO4EQ: "author", fldIucKCQWOnZp1Bi: "date",
       fldm2HjE7PEN3hU0n: "notes", fldglDofWQ9vufOCk: "documents", fldi7g5q1MalmVyla: "letter_type", fldQeNqc0kHjt8Jki: "letter_text"
     }
+  },
+  adminlog: {
+    id: "tblBXzNsCIKILpPgR",
+    fresh: true,
+    fields: { fldZhKXGNU19DESBK: "summary", fldCeen1cs82bzow6: "action", fldbB0o7a0SkFuGbD: "by", fldV6FrXvm9CEIt22: "person", fldeAZYCVVfulrBQC: "details", fld9veSoNZh6HPUr5: "when" }
   },
   templates: {
     id: "tbloGcnfTRAu5niHD",

@@ -1,9 +1,9 @@
-// POST /api/upload · v01 (2026-11-04). Adds one file (base64 JSON, up to 4 MB) to a complaint or a progress update.
+// POST /api/upload · v02 (2026-11-04). v02: refused while viewing as someone. Adds one file (base64 JSON, up to 4 MB) to a complaint or a progress update.
 // Allowed with a session that can work on the complaint, or with the intake ticket for that complaint's own
 // Uploads and Records Release Form fields.
-import { body, checkPost, json, unseal, sessionEmail } from "../lib/core.mjs";
+import { body, checkPost, json, unseal } from "../lib/core.mjs";
 import { readOne, uploadAttachment } from "../lib/airtable.mjs";
-import { personByEmail, can } from "../lib/access.mjs";
+import { who, can } from "../lib/access.mjs";
 
 const MAX = 4 * 1024 * 1024;
 const OK_TYPES = /^(application\/pdf|image\/(jpeg|png|gif|heic|heif|webp)|text\/plain|application\/(msword|rtf|vnd\.ms-excel|vnd\.openxmlformats-officedocument\.[\w.]+))$/;
@@ -24,9 +24,10 @@ export default async (req) => {
     const c = await readOne("complaints", b.complaint);
     if (!c) return json({ error: "That request was not found." }, 404);
     const ticket = unseal(b.ticket);
-    const me = await personByEmail(sessionEmail(req));
+    const w = await who(req);
     const byTicket = !!(ticket && ticket.c === c.id && FIELDS[b.field]);
-    const bySession = !!(me && can(me, "work", c));
+    if (!byTicket && w.viewing) return json({ error: `You are viewing as ${w.viewing.name}. Stop viewing to make changes.` }, 403);
+    const bySession = !!(w.real && !w.viewing && can(w.real, "work", c));
     if (!byTicket && !bySession) return NO();
     const file = { filename, contentType, base64: data };
     if (b.field === "update") {

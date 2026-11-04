@@ -99,3 +99,14 @@ Placeholders: `{complaint_number}`, `{received_date}`, `{owner_name}`, `{owner_e
 | Attempts | `fldQSqbcIBd2xNE2k` |
 | Used | `fldcd0VMZTV6BPgrw` |
 | Created | `fldJzUTiT2ug5sqkc` |
+
+## Admin Log `tblBXzNsCIKILpPgR` (written by the portal; added 2026-11-04)
+
+| Field | ID |
+|---|---|
+| Summary (primary) | `fldZhKXGNU19DESBK` |
+| Action (View as started / View as stopped / Person changed / Person added) | `fldCeen1cs82bzow6` |
+| By (link → People) | `fldbB0o7a0SkFuGbD` |
+| Person (link → People) | `fldV6FrXvm9CEIt22` |
+| Details | `fldeAZYCVVfulrBQC` |
+| When (created time) | `fld9veSoNZh6HPUr5` |

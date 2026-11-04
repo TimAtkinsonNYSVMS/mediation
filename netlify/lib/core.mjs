@@ -77,6 +77,18 @@ export function sessionEmail(req) {
   return s && s.email ? s.email : null;
 }
 
+// ---- View as (docs/admin-and-view-as-spec.md) ----
+// A separate signed cookie: { by: staff People ID, as: viewed People ID, exp }. The session cookie never changes.
+export const VIEWAS_COOKIE = "cm_viewas";
+export const VIEWAS_HOURS = 2;
+export const viewAsCookie = (by, as) =>
+  cookie(VIEWAS_COOKIE, seal({ by, as, exp: Date.now() + VIEWAS_HOURS * 3600e3 }), VIEWAS_HOURS * 3600);
+export const clearViewAs = cookie(VIEWAS_COOKIE, "", 0);
+export function viewAsClaim(req) {
+  const v = unseal(readCookie(req, VIEWAS_COOKIE));
+  return v && v.by && v.as ? v : null;
+}
+
 // Today's date in New York as YYYY-MM-DD (approval dates).
 export const today = (now = new Date()) =>
   new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York", year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
