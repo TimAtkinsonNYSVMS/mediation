@@ -1,0 +1,1044 @@
+{
+ "name": "Complaints portal - Migrate (Knack → Airtable)",
+ "flow": [
+  {
+   "id": 1,
+   "module": "scenario-service:StartSubscenario",
+   "version": 2,
+   "metadata": {
+    "designer": {
+     "x": 0,
+     "y": 0
+    },
+    "interface": [
+     {
+      "name": "stage",
+      "label": "Stage",
+      "type": "text",
+      "required": true,
+      "help": "facilitators | complaints | updates — run in that order"
+     }
+    ]
+   }
+  },
+  {
+   "id": 2,
+   "module": "builtin:BasicRouter",
+   "version": 1,
+   "mapper": null,
+   "metadata": {
+    "designer": {
+     "x": 10200,
+     "y": 0
+    }
+   },
+   "routes": [
+    {
+     "flow": [
+      {
+       "id": 10,
+       "module": "knack:SearchForRecords",
+       "version": 2,
+       "parameters": {
+        "__IMTCONN__": 2176791
+       },
+       "mapper": {
+        "object_id": "object_4",
+        "limit": 1000,
+        "mode": "both",
+        "match": "",
+        "filters": [],
+        "sort_field": ""
+       },
+       "metadata": {
+        "designer": {
+         "x": 300,
+         "y": 0
+        }
+       },
+       "filter": {
+        "name": "stage = facilitators",
+        "conditions": [
+         [
+          {
+           "a": "{{1.stage}}",
+           "o": "text:equal",
+           "b": "facilitators"
+          }
+         ]
+        ]
+       }
+      },
+      {
+       "id": 11,
+       "module": "airtable:bulkUpsertRecords",
+       "version": 3,
+       "parameters": {
+        "__IMTCONN__": 4677355
+       },
+       "filter": {
+        "name": "has email",
+        "conditions": [
+         [
+          {
+           "a": "{{10.field_30_raw.email}}",
+           "o": "exist"
+          }
+         ]
+        ]
+       },
+       "mapper": {
+        "select": "map",
+        "base": "appUbdZxOQ7WjyOYJ",
+        "table": "tblMC3vdByJkY9jEC",
+        "fieldsToMergeOn": [
+         "fldvjOpPE8GajiOrx"
+        ],
+        "typecast": true,
+        "useColumnId": true,
+        "records": [
+         {
+          "record": [
+           {
+            "id": "fldvjOpPE8GajiOrx",
+            "type": "text",
+            "value": "{{lower(trim(10.field_30_raw.email))}}"
+           },
+           {
+            "id": "fldYjFqomse1p91BB",
+            "type": "text",
+            "value": "{{trim(10.field_29_raw.full)}}"
+           },
+           {
+            "id": "fldISqQVSu1f3qLnZ",
+            "type": "multiple",
+            "value": [
+             "Facilitator"
+            ]
+           },
+           {
+            "id": "fldM1SsovNPz8jjSc",
+            "type": "boolean",
+            "value": "{{if(contains(10.field_32_raw; \"active\"); true; false)}}"
+           },
+           {
+            "id": "fldXUBbG7YL9cbK0f",
+            "type": "text",
+            "value": "{{10.field_77_raw[1]}}"
+           },
+           {
+            "id": "fldJlsqHZyveFk9Wo",
+            "type": "text",
+            "value": "{{10.id}}"
+           }
+          ]
+         }
+        ]
+       },
+       "metadata": {
+        "designer": {
+         "x": 900,
+         "y": 0,
+         "name": "Upsert facilitator"
+        }
+       }
+      }
+     ]
+    },
+    {
+     "flow": [
+      {
+       "id": 20,
+       "module": "knack:SearchForRecords",
+       "version": 2,
+       "parameters": {
+        "__IMTCONN__": 2176791
+       },
+       "mapper": {
+        "object_id": "object_1",
+        "limit": 1000,
+        "mode": "both",
+        "match": "",
+        "filters": [],
+        "sort_field": ""
+       },
+       "metadata": {
+        "designer": {
+         "x": 5400,
+         "y": 0
+        }
+       },
+       "filter": {
+        "name": "stage = complaints",
+        "conditions": [
+         [
+          {
+           "a": "{{1.stage}}",
+           "o": "text:equal",
+           "b": "complaints"
+          }
+         ]
+        ]
+       }
+      },
+      {
+       "id": 30,
+       "module": "airtable:bulkUpsertRecords",
+       "version": 3,
+       "parameters": {
+        "__IMTCONN__": 4677355
+       },
+       "mapper": {
+        "select": "map",
+        "base": "appUbdZxOQ7WjyOYJ",
+        "table": "tbl0FlFU8Xxn5UfK1",
+        "fieldsToMergeOn": [
+         "fldUCyupEW8d0KPIj"
+        ],
+        "typecast": true,
+        "useColumnId": true,
+        "records": [
+         {
+          "record": [
+           {
+            "id": "fldUCyupEW8d0KPIj",
+            "type": "text",
+            "value": "{{20.id}}"
+           },
+           {
+            "id": "fldg11sJnOcSL9isq",
+            "type": "number",
+            "value": "{{20.field_2_raw}}"
+           },
+           {
+            "id": "fldf529tftYjMmXTz",
+            "type": "date",
+            "value": "{{ifempty(20.field_66_raw.proper_iso_timestamp; 20.field_66_raw.iso_timestamp)}}"
+           },
+           {
+            "id": "flduLBEGv02ch9cDn",
+            "type": "text",
+            "value": "{{ifempty(20.field_54_raw[1]; \"Awaiting assignment\")}}"
+           },
+           {
+            "id": "fldn8dv0UnA0sDLfh",
+            "type": "text",
+            "value": "{{20.field_1_raw}}"
+           },
+           {
+            "id": "fldioiCzvEYdviMJ9",
+            "type": "text",
+            "value": "{{20.field_7_raw}}"
+           },
+           {
+            "id": "fldQ1b2UFA3D6mNAI",
+            "type": "text",
+            "value": "{{20.field_8_raw}}"
+           },
+           {
+            "id": "fldjTlxd3X4FG2uKs",
+            "type": "text",
+            "value": "{{20.field_76_raw.email}}"
+           },
+           {
+            "id": "fldus5G7qO3ji0IWa",
+            "type": "text",
+            "value": "{{20.field_52_raw}}"
+           },
+           {
+            "id": "fldNBq6JPynKKyHqu",
+            "type": "text",
+            "value": "{{20.field_53_raw.full}}"
+           },
+           {
+            "id": "fldrQoWyAYJAIjIw5",
+            "type": "boolean",
+            "value": "{{if(20.field_22_raw; true; false)}}"
+           },
+           {
+            "id": "fldSOmidssLI4qhfF",
+            "type": "boolean",
+            "value": "{{if(20.field_9_raw; true; false)}}"
+           },
+           {
+            "id": "fld8dwP5IQ83QKMMF",
+            "type": "boolean",
+            "value": "{{if(20.field_11_raw; true; false)}}"
+           },
+           {
+            "id": "fldujZaqEFtTSxVuF",
+            "type": "boolean",
+            "value": "{{if(20.field_65_raw; true; false)}}"
+           },
+           {
+            "id": "fld8fHdDGtVKQJydo",
+            "type": "boolean",
+            "value": "{{if(20.field_12_raw; true; false)}}"
+           },
+           {
+            "id": "fld8pkG02efarEZC6",
+            "type": "boolean",
+            "value": "{{if(20.field_13_raw; true; false)}}"
+           },
+           {
+            "id": "fldHeqnXSU0drmpe7",
+            "type": "boolean",
+            "value": "{{if(20.field_24_raw; true; false)}}"
+           },
+           {
+            "id": "fldDZZMVNVTayS2dC",
+            "type": "text",
+            "value": "{{20.field_63_raw}}"
+           },
+           {
+            "id": "fldCwzyS6IxW5Wc1G",
+            "type": "text",
+            "value": "{{20.field_62_raw}}"
+           },
+           {
+            "id": "fldkFRh6jGXrSV8Hx",
+            "type": "text",
+            "value": "{{20.field_86_raw.full}}"
+           }
+          ]
+         }
+        ]
+       },
+       "metadata": {
+        "designer": {
+         "x": 6000,
+         "y": 0,
+         "name": "Upsert complaint"
+        }
+       }
+      },
+      {
+       "id": 39,
+       "module": "builtin:BasicRouter",
+       "version": 1,
+       "mapper": null,
+       "metadata": {
+        "designer": {
+         "x": 6300,
+         "y": 0
+        }
+       },
+       "routes": [
+        {
+         "flow": [
+          {
+           "id": 31,
+           "module": "airtable:bulkUpsertRecords",
+           "version": 3,
+           "parameters": {
+            "__IMTCONN__": 4677355
+           },
+           "filter": {
+            "name": "owner email",
+            "conditions": [
+             [
+              {
+               "a": "{{20.field_67_raw}}",
+               "o": "exist"
+              }
+             ]
+            ]
+           },
+           "mapper": {
+            "select": "map",
+            "base": "appUbdZxOQ7WjyOYJ",
+            "table": "tblMC3vdByJkY9jEC",
+            "fieldsToMergeOn": [
+             "fldvjOpPE8GajiOrx"
+            ],
+            "typecast": true,
+            "useColumnId": true,
+            "records": [
+             {
+              "record": [
+               {
+                "id": "fldvjOpPE8GajiOrx",
+                "type": "text",
+                "value": "{{lower(trim(20.field_67_raw))}}"
+               },
+               {
+                "id": "fldYjFqomse1p91BB",
+                "type": "text",
+                "value": "{{trim(20.field_19_raw[1].identifier)}}"
+               },
+               {
+                "id": "fldvdFwuiAauexiiR",
+                "type": "text",
+                "value": "{{20.field_68_raw}}"
+               },
+               {
+                "id": "fldSaGISV1gYGdGxD",
+                "type": "text",
+                "value": "{{trim(replace(20.field_69_raw; \"<br />\"; \", \"))}}"
+               }
+              ]
+             }
+            ]
+           },
+           "metadata": {
+            "designer": {
+             "x": 1500,
+             "y": 0,
+             "name": "Upsert owner"
+            }
+           }
+          },
+          {
+           "id": 32,
+           "module": "airtable:bulkUpsertRecords",
+           "version": 3,
+           "parameters": {
+            "__IMTCONN__": 4677355
+           },
+           "mapper": {
+            "select": "map",
+            "base": "appUbdZxOQ7WjyOYJ",
+            "table": "tbl0FlFU8Xxn5UfK1",
+            "fieldsToMergeOn": [
+             "fldUCyupEW8d0KPIj"
+            ],
+            "typecast": true,
+            "useColumnId": true,
+            "records": [
+             {
+              "record": [
+               {
+                "id": "fldUCyupEW8d0KPIj",
+                "type": "text",
+                "value": "{{20.id}}"
+               },
+               {
+                "id": "fldBXPZ7L6s29trcD",
+                "type": "multiple",
+                "value": [
+                 "{{31.id}}"
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "metadata": {
+            "designer": {
+             "x": 2100,
+             "y": 0,
+             "name": "Link owner"
+            }
+           }
+          }
+         ]
+        },
+        {
+         "flow": [
+          {
+           "id": 33,
+           "module": "airtable:ActionSearchRecords",
+           "version": 3,
+           "parameters": {
+            "__IMTCONN__": 4677355
+           },
+           "filter": {
+            "name": "has facilitator",
+            "conditions": [
+             [
+              {
+               "a": "{{20.field_39_raw[1].id}}",
+               "o": "exist"
+              }
+             ]
+            ]
+           },
+           "mapper": {
+            "base": "appUbdZxOQ7WjyOYJ",
+            "table": "tblMC3vdByJkY9jEC",
+            "formula": "{Knack IDs} = \"{{20.field_39_raw[1].id}}\"",
+            "formulaField": "formula",
+            "maxRecords": 1,
+            "useColumnId": true
+           },
+           "metadata": {
+            "designer": {
+             "x": 2700,
+             "y": 0,
+             "name": "Find facilitator"
+            }
+           }
+          },
+          {
+           "id": 34,
+           "module": "airtable:bulkUpsertRecords",
+           "version": 3,
+           "parameters": {
+            "__IMTCONN__": 4677355
+           },
+           "mapper": {
+            "select": "map",
+            "base": "appUbdZxOQ7WjyOYJ",
+            "table": "tbl0FlFU8Xxn5UfK1",
+            "fieldsToMergeOn": [
+             "fldUCyupEW8d0KPIj"
+            ],
+            "typecast": true,
+            "useColumnId": true,
+            "records": [
+             {
+              "record": [
+               {
+                "id": "fldUCyupEW8d0KPIj",
+                "type": "text",
+                "value": "{{20.id}}"
+               },
+               {
+                "id": "fldcuf96LhF1XKlaV",
+                "type": "multiple",
+                "value": [
+                 "{{33.id}}"
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "metadata": {
+            "designer": {
+             "x": 3300,
+             "y": 0,
+             "name": "Link facilitator"
+            }
+           }
+          }
+         ]
+        },
+        {
+         "flow": [
+          {
+           "id": 35,
+           "module": "airtable:bulkUpsertRecords",
+           "version": 3,
+           "parameters": {
+            "__IMTCONN__": 4677355
+           },
+           "filter": {
+            "name": "has upload",
+            "conditions": [
+             [
+              {
+               "a": "{{20.field_23_raw.url}}",
+               "o": "exist"
+              }
+             ]
+            ]
+           },
+           "mapper": {
+            "select": "map",
+            "base": "appUbdZxOQ7WjyOYJ",
+            "table": "tbl0FlFU8Xxn5UfK1",
+            "fieldsToMergeOn": [
+             "fldUCyupEW8d0KPIj"
+            ],
+            "typecast": true,
+            "useColumnId": true,
+            "records": [
+             {
+              "record": [
+               {
+                "id": "fldUCyupEW8d0KPIj",
+                "type": "text",
+                "value": "{{20.id}}"
+               },
+               {
+                "id": "fld5c7WytBfZRJdMG",
+                "type": "openUrl",
+                "value": [
+                 {
+                  "url": "{{20.field_23_raw.url}}",
+                  "filename": "{{20.field_23_raw.filename}}"
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "metadata": {
+            "designer": {
+             "x": 3900,
+             "y": 0,
+             "name": "Uploads file"
+            }
+           }
+          }
+         ]
+        },
+        {
+         "flow": [
+          {
+           "id": 36,
+           "module": "airtable:bulkUpsertRecords",
+           "version": 3,
+           "parameters": {
+            "__IMTCONN__": 4677355
+           },
+           "filter": {
+            "name": "has release form",
+            "conditions": [
+             [
+              {
+               "a": "{{20.field_25_raw.url}}",
+               "o": "exist"
+              }
+             ]
+            ]
+           },
+           "mapper": {
+            "select": "map",
+            "base": "appUbdZxOQ7WjyOYJ",
+            "table": "tbl0FlFU8Xxn5UfK1",
+            "fieldsToMergeOn": [
+             "fldUCyupEW8d0KPIj"
+            ],
+            "typecast": true,
+            "useColumnId": true,
+            "records": [
+             {
+              "record": [
+               {
+                "id": "fldUCyupEW8d0KPIj",
+                "type": "text",
+                "value": "{{20.id}}"
+               },
+               {
+                "id": "fldPpBXyG3eRyGRi0",
+                "type": "openUrl",
+                "value": [
+                 {
+                  "url": "{{20.field_25_raw.url}}",
+                  "filename": "{{20.field_25_raw.filename}}"
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "metadata": {
+            "designer": {
+             "x": 4500,
+             "y": 0,
+             "name": "Release form file"
+            }
+           }
+          }
+         ]
+        },
+        {
+         "flow": [
+          {
+           "id": 37,
+           "module": "airtable:bulkUpsertRecords",
+           "version": 3,
+           "parameters": {
+            "__IMTCONN__": 4677355
+           },
+           "filter": {
+            "name": "has feedback",
+            "conditions": [
+             [
+              {
+               "a": "{{20.field_72_raw}}",
+               "o": "exist"
+              }
+             ],
+             [
+              {
+               "a": "{{20.field_75_raw}}",
+               "o": "exist"
+              }
+             ]
+            ]
+           },
+           "mapper": {
+            "select": "map",
+            "base": "appUbdZxOQ7WjyOYJ",
+            "table": "tbl0FlFU8Xxn5UfK1",
+            "fieldsToMergeOn": [
+             "fldUCyupEW8d0KPIj"
+            ],
+            "typecast": true,
+            "useColumnId": true,
+            "records": [
+             {
+              "record": [
+               {
+                "id": "fldUCyupEW8d0KPIj",
+                "type": "text",
+                "value": "{{20.id}}"
+               },
+               {
+                "id": "fldW8uipeCU9zBKGo",
+                "type": "date",
+                "value": "{{ifempty(20.field_71_raw.proper_iso_timestamp; 20.field_71_raw.iso_timestamp)}}"
+               },
+               {
+                "id": "fldAK4HIVK3mOAAYs",
+                "type": "number",
+                "value": "{{if(20.field_72_raw; ceil(20.field_72_raw); \"\")}}"
+               },
+               {
+                "id": "fldXs9UGqSVLyuVd8",
+                "type": "number",
+                "value": "{{if(20.field_85_raw; ceil(20.field_85_raw); \"\")}}"
+               },
+               {
+                "id": "flddQcVoT2wAhu6ul",
+                "type": "number",
+                "value": "{{if(20.field_73_raw; ceil(20.field_73_raw); \"\")}}"
+               },
+               {
+                "id": "fldZ7eJTGBYf38ydY",
+                "type": "number",
+                "value": "{{if(20.field_74_raw; ceil(20.field_74_raw); \"\")}}"
+               },
+               {
+                "id": "fld9Vnqur9xRama69",
+                "type": "text",
+                "value": "{{20.field_75_raw}}"
+               }
+              ]
+             }
+            ]
+           },
+           "metadata": {
+            "designer": {
+             "x": 5100,
+             "y": 0,
+             "name": "Feedback"
+            }
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    },
+    {
+     "flow": [
+      {
+       "id": 40,
+       "module": "knack:SearchForRecords",
+       "version": 2,
+       "parameters": {
+        "__IMTCONN__": 2176791
+       },
+       "mapper": {
+        "object_id": "object_3",
+        "limit": 1000,
+        "mode": "both",
+        "match": "",
+        "filters": [],
+        "sort_field": ""
+       },
+       "metadata": {
+        "designer": {
+         "x": 6600,
+         "y": 0
+        }
+       },
+       "filter": {
+        "name": "stage = updates",
+        "conditions": [
+         [
+          {
+           "a": "{{1.stage}}",
+           "o": "text:equal",
+           "b": "updates"
+          }
+         ]
+        ]
+       }
+      },
+      {
+       "id": 41,
+       "module": "airtable:ActionSearchRecords",
+       "version": 3,
+       "parameters": {
+        "__IMTCONN__": 4677355
+       },
+       "filter": {
+        "name": "has complaint",
+        "conditions": [
+         [
+          {
+           "a": "{{40.field_40_raw[1].id}}",
+           "o": "exist"
+          }
+         ]
+        ]
+       },
+       "mapper": {
+        "base": "appUbdZxOQ7WjyOYJ",
+        "table": "tbl0FlFU8Xxn5UfK1",
+        "formula": "{Knack ID} = \"{{40.field_40_raw[1].id}}\"",
+        "formulaField": "formula",
+        "maxRecords": 1,
+        "useColumnId": true
+       },
+       "metadata": {
+        "designer": {
+         "x": 7200,
+         "y": 0,
+         "name": "Find complaint"
+        }
+       }
+      },
+      {
+       "id": 42,
+       "module": "airtable:bulkUpsertRecords",
+       "version": 3,
+       "parameters": {
+        "__IMTCONN__": 4677355
+       },
+       "mapper": {
+        "select": "map",
+        "base": "appUbdZxOQ7WjyOYJ",
+        "table": "tblzyvyYFymTo4xR6",
+        "fieldsToMergeOn": [
+         "fldBXhXqXp02JKC3o"
+        ],
+        "typecast": true,
+        "useColumnId": true,
+        "records": [
+         {
+          "record": [
+           {
+            "id": "fldBXhXqXp02JKC3o",
+            "type": "text",
+            "value": "{{40.id}}"
+           },
+           {
+            "id": "fld8lFmpecZG7cdaQ",
+            "type": "number",
+            "value": "{{40.field_41_raw}}"
+           },
+           {
+            "id": "fldj3FAAYKeGMKuhG",
+            "type": "multiple",
+            "value": [
+             "{{41.id}}"
+            ]
+           },
+           {
+            "id": "fldIucKCQWOnZp1Bi",
+            "type": "date",
+            "value": "{{ifempty(40.field_27_raw.proper_iso_timestamp; 40.field_27_raw.iso_timestamp)}}"
+           },
+           {
+            "id": "fldm2HjE7PEN3hU0n",
+            "type": "text",
+            "value": "{{40.field_43_raw}}"
+           },
+           {
+            "id": "fldi7g5q1MalmVyla",
+            "type": "text",
+            "value": "{{40.field_84_raw}}"
+           },
+           {
+            "id": "fldQeNqc0kHjt8Jki",
+            "type": "text",
+            "value": "{{40.field_82_raw}}"
+           }
+          ]
+         }
+        ]
+       },
+       "metadata": {
+        "designer": {
+         "x": 7800,
+         "y": 0,
+         "name": "Upsert update"
+        }
+       }
+      },
+      {
+       "id": 49,
+       "module": "builtin:BasicRouter",
+       "version": 1,
+       "mapper": null,
+       "metadata": {
+        "designer": {
+         "x": 8100,
+         "y": 0
+        }
+       },
+       "routes": [
+        {
+         "flow": [
+          {
+           "id": 43,
+           "module": "airtable:ActionSearchRecords",
+           "version": 3,
+           "parameters": {
+            "__IMTCONN__": 4677355
+           },
+           "filter": {
+            "name": "has author",
+            "conditions": [
+             [
+              {
+               "a": "{{40.field_42_raw[1].id}}",
+               "o": "exist"
+              }
+             ]
+            ]
+           },
+           "mapper": {
+            "base": "appUbdZxOQ7WjyOYJ",
+            "table": "tblMC3vdByJkY9jEC",
+            "formula": "{Knack IDs} = \"{{40.field_42_raw[1].id}}\"",
+            "formulaField": "formula",
+            "maxRecords": 1,
+            "useColumnId": true
+           },
+           "metadata": {
+            "designer": {
+             "x": 8700,
+             "y": 0,
+             "name": "Find author"
+            }
+           }
+          },
+          {
+           "id": 44,
+           "module": "airtable:bulkUpsertRecords",
+           "version": 3,
+           "parameters": {
+            "__IMTCONN__": 4677355
+           },
+           "mapper": {
+            "select": "map",
+            "base": "appUbdZxOQ7WjyOYJ",
+            "table": "tblzyvyYFymTo4xR6",
+            "fieldsToMergeOn": [
+             "fldBXhXqXp02JKC3o"
+            ],
+            "typecast": true,
+            "useColumnId": true,
+            "records": [
+             {
+              "record": [
+               {
+                "id": "fldBXhXqXp02JKC3o",
+                "type": "text",
+                "value": "{{40.id}}"
+               },
+               {
+                "id": "fldvm1aIsRmvMO4EQ",
+                "type": "multiple",
+                "value": [
+                 "{{43.id}}"
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "metadata": {
+            "designer": {
+             "x": 9300,
+             "y": 0,
+             "name": "Link author"
+            }
+           }
+          }
+         ]
+        },
+        {
+         "flow": [
+          {
+           "id": 45,
+           "module": "airtable:bulkUpsertRecords",
+           "version": 3,
+           "parameters": {
+            "__IMTCONN__": 4677355
+           },
+           "filter": {
+            "name": "has document",
+            "conditions": [
+             [
+              {
+               "a": "{{40.field_44_raw.url}}",
+               "o": "exist"
+              }
+             ]
+            ]
+           },
+           "mapper": {
+            "select": "map",
+            "base": "appUbdZxOQ7WjyOYJ",
+            "table": "tblzyvyYFymTo4xR6",
+            "fieldsToMergeOn": [
+             "fldBXhXqXp02JKC3o"
+            ],
+            "typecast": true,
+            "useColumnId": true,
+            "records": [
+             {
+              "record": [
+               {
+                "id": "fldBXhXqXp02JKC3o",
+                "type": "text",
+                "value": "{{40.id}}"
+               },
+               {
+                "id": "fldglDofWQ9vufOCk",
+                "type": "openUrl",
+                "value": [
+                 {
+                  "url": "{{40.field_44_raw.url}}",
+                  "filename": "{{40.field_44_raw.filename}}"
+                 }
+                ]
+               }
+              ]
+             }
+            ]
+           },
+           "metadata": {
+            "designer": {
+             "x": 9900,
+             "y": 0,
+             "name": "Document file"
+            }
+           }
+          }
+         ]
+        }
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ],
+ "metadata": {
+  "version": 1,
+  "instant": false,
+  "scenario": {
+   "roundtrips": 1,
+   "maxErrors": 3,
+   "autoCommit": true,
+   "autoCommitTriggerLast": true,
+   "sequential": false,
+   "confidential": false,
+   "dataloss": false,
+   "dlq": false,
+   "freshVariables": false
+  }
+ }
+}

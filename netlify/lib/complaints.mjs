@@ -1,0 +1,102 @@
+// Complaints portal domain v01 (2026-11-04). Shapes complaints for each kind of viewer, numbers new complaints,
+// and builds the notification emails that replaced the 5 Knack email rules (docs/phase2-portal-spec.md).
+import { env } from "./core.mjs";
+import { readTable, readByIds } from "./airtable.mjs";
+import { viewOf, can, activeStaff, statusAllowed, STATUSES } from "./access.mjs";
+import { notify } from "./mail.mjs";
+
+export const portalUrl = () => env("PORTAL_URL", "https://complaints.nysvms.org");
+const first = (a) => (Array.isArray(a) ? a[0] : a) || null;
+const files = (list) => (list || []).map((f) => ({ id: f.id, filename: f.filename, size: f.size || 0, type: f.type || "" }));
+
+export async function peopleById() {
+  return new Map((await readTable("people")).map((p) => [p.id, p]));
+}
+
+// One row of a list.
+export function listItem(c, people, view) {
+  const fac = people.get(first(c.facilitator));
+  const item = {
+    id: c.id, n: c.n, received: c.received, status: c.status || "Awaiting assignment", subject: c.subject || "",
+    vet_name: c.vet_name || "", practice: c.practice || "", facilitator: fac ? fac.name : "",
+    last_activity: c.last_update || (c.received || "").slice(0, 10)
+  };
+  if (view === "full") {
+    const owner = people.get(first(c.owner));
+    item.owner = owner ? owner.name : "";
+    item.region = fac?.region || "";
+  }
+  return item;
+}
+
+// The detail view. "owner" leaves out progress notes and other people's contact details.
+export async function detail(me, c) {
+  const view = viewOf(me, c);
+  const people = await peopleById();
+  const fac = people.get(first(c.facilitator));
+  const owner = people.get(first(c.owner));
+  const base = {
+    id: c.id, n: c.n, view, received: c.received, status: c.status || "Awaiting assignment", subject: c.subject || "",
+    description: c.description || "", vet_name: c.vet_name || "", practice: c.practice || "",
+    facilitator: fac ? { id: fac.id, name: fac.name || "" } : null,
+    uploads: files(c.uploads), release: files(c.release), records_ok: !!c.records_ok,
+    can_feedback: can(me, "feedback", c), feedback_given: !!c.fb_date
+  };
+  if (c.status === "Completed") base.resolution = c.resolution || "";
+  if (view === "owner") return base;
+  const updates = (await readByIds("updates", c.updates)).map((u) => {
+    const a = people.get(first(u.author));
+    return { id: u.id, n: u.n, date: u.date, author: a ? a.name : "", notes: u.notes || "", letter_type: u.letter_type || "", letter_text: u.letter_text || "", documents: files(u.documents) };
+  }).sort((a, b) => String(b.date).localeCompare(String(a.date)) || (b.n || 0) - (a.n || 0));
+  return {
+    ...base,
+    owner: owner ? { name: owner.name || "", email: owner.email || "", phone: owner.phone || "", address: owner.address || "" } : null,
+    facilitator: fac ? { id: fac.id, name: fac.name || "", email: fac.email || "", region: fac.region || "" } : null,
+    vet_email: c.vet_email || "", practice_address: c.practice_address || "",
+    attestations: { member: !!c.a_member, legal: !!c.a_legal, opd: !!c.a_opd, fees: !!c.a_fees, service: !!c.a_service, terms: !!c.a_terms },
+    resolution: c.resolution || "", resolution_notes: c.resolution_notes || "",
+    feedback: c.fb_date ? { date: c.fb_date, overall: c.fb_overall, value: c.fb_value, facilitator: c.fb_facilitator, admin: c.fb_admin, comments: c.fb_comments || "" } : null,
+    updates, can_assign: can(me, "assign", c), can_work: can(me, "work", c),
+    statuses: STATUSES.filter((s) => statusAllowed(me, s) || s === c.status)
+  };
+}
+
+export async function nextNumber() {
+  const ns = (await readTable("complaints")).map((c) => Number(c.n) || 0);
+  return Math.max(316, ...ns) + 1;
+}
+
+// ---- notices (never throw) ----
+const link = (c) => `${portalUrl()}/#/c/${c.id}`;
+const others = (list, me) => list.filter((p) => !me || p.email !== me.email);
+
+export async function noticeNewComplaint(c, owner) {
+  const first = String(owner.name || "").split(" ")[0] || "there";
+  await notify([{ email: owner.email, name: owner.name }], "Your complaint about your veterinarian has been received",
+    `Dear ${first},\n\nThank you for choosing to use the NYSVMS Complaints Center. We have received your complaint about ${c.vet_name}, complaint #${c.n}.\n\n` +
+    `The next stage is that we will assign a volunteer veterinarian who will review your case, and you should hear from them shortly.\n\n` +
+    `You can check on your complaint at any time: ${portalUrl()}\nSign in with this email address and we will send you a code.\n\n` +
+    `If you have any questions in the meantime, please email staff@nysvms.org.\n\nNew York State Veterinary Medical Society`);
+  await notify([{ email: env("STAFF_INBOX", "staff@nysvms.org"), name: "NYSVMS staff" }], `New complaint #${c.n}: ${c.subject}`,
+    `A new complaint has been filed.\n\nComplaint #${c.n}\nFrom: ${owner.name}\nAbout: ${c.vet_name}${c.practice ? `, ${c.practice}` : ""}\nSubject: ${c.subject}\n\nAssign a facilitator: ${link(c)}`);
+}
+
+export async function noticeAssigned(c, fac, me) {
+  const staff = others(await activeStaff(), me);
+  await notify([{ email: fac.email, name: fac.name }], `Complaint #${c.n} assigned to you for mediation`,
+    `New facilitator assignment for ${fac.name}.\n\nYou have been asked to facilitate complaint #${c.n}, received ${String(c.received || "").slice(0, 10)}.\nSubject: ${c.subject}\n\n` +
+    `Open it in the complaints portal: ${link(c)}\nSign in with this email address and we will send you a code.\n\nIf you have any questions or can't take this on, please reply to staff@nysvms.org.`);
+  if (staff.length) await notify(staff, `Complaint #${c.n} assigned to ${fac.name}`, `${me?.name || "Staff"} assigned complaint #${c.n} (${c.subject}) to ${fac.name}.\n\n${link(c)}`);
+}
+
+export async function noticeUpdate(c, me, notes) {
+  await notify(others(await activeStaff(), me), `Update on complaint #${c.n}`, `${me.name} added an update to complaint #${c.n} (${c.subject}):\n\n${notes}\n\n${link(c)}`);
+}
+
+export async function noticeStatus(c, me, status) {
+  await notify(others(await activeStaff(), me), `Complaint #${c.n} is now: ${status}`, `${me.name} changed the status of complaint #${c.n} (${c.subject}) to "${status}".\n\n${link(c)}`);
+}
+
+export async function noticeFeedback(c) {
+  await notify(await activeStaff(), `Feedback received on complaint #${c.n}`, `The owner left feedback on complaint #${c.n} (${c.subject}).\n\n${link(c)}`);
+}

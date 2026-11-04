@@ -1,0 +1,6 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    { "name": "complaints-portal", "runtimeExecutable": "node", "runtimeArgs": ["test/dev-server.mjs"], "port": 8892 }
+  ]
+}

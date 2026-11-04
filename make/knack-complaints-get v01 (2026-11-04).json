@@ -1,0 +1,136 @@
+{
+ "_version": "knack-complaints-get v01 (2026-11-04) — Make scenario 5021492",
+ "name": "Claude subroutine - Knack Complaints GET (read only)",
+ "flow": [
+  {
+   "id": 1,
+   "module": "scenario-service:StartSubscenario",
+   "version": 2,
+   "metadata": {
+    "interface": [
+     {
+      "help": "Knack object key in the Complaints Process app, e.g. object_1 (Complaints), object_3 (Progress Updates), object_4 (Facilitators). Read only.",
+      "name": "object_id",
+      "type": "text",
+      "label": "Object",
+      "required": true
+     },
+     {
+      "help": "Max records to return (default 1000)",
+      "name": "limit",
+      "type": "number",
+      "label": "Limit",
+      "required": false
+     }
+    ]
+   }
+  },
+  {
+   "id": 2,
+   "module": "knack:SearchForRecords",
+   "version": 2,
+   "parameters": {
+    "__IMTCONN__": 2176791
+   },
+   "mapper": {
+    "object_id": "{{1.object_id}}",
+    "limit": "{{ifempty(1.limit; 1000)}}",
+    "mode": "both",
+    "match": "",
+    "filters": [],
+    "sort_field": ""
+   }
+  },
+  {
+   "id": 3,
+   "module": "builtin:BasicAggregator",
+   "version": 1,
+   "parameters": {
+    "feeder": 2
+   },
+   "mapper": {
+    "id": "{{2.id}}",
+    "field_2": "{{2.field_2_raw}}",
+    "field_19": "{{2.field_19_raw}}",
+    "field_1": "{{2.field_1_raw}}",
+    "field_7": "{{2.field_7_raw}}",
+    "field_8": "{{2.field_8_raw}}",
+    "field_52": "{{2.field_52_raw}}",
+    "field_53": "{{2.field_53_raw}}",
+    "field_9": "{{2.field_9_raw}}",
+    "field_11": "{{2.field_11_raw}}",
+    "field_12": "{{2.field_12_raw}}",
+    "field_13": "{{2.field_13_raw}}",
+    "field_22": "{{2.field_22_raw}}",
+    "field_23": "{{2.field_23_raw}}",
+    "field_24": "{{2.field_24_raw}}",
+    "field_25": "{{2.field_25_raw}}",
+    "field_39": "{{2.field_39_raw}}",
+    "field_54": "{{2.field_54_raw}}",
+    "field_63": "{{2.field_63_raw}}",
+    "field_62": "{{2.field_62_raw}}",
+    "field_65": "{{2.field_65_raw}}",
+    "field_66": "{{2.field_66_raw}}",
+    "field_67": "{{2.field_67_raw}}",
+    "field_68": "{{2.field_68_raw}}",
+    "field_69": "{{2.field_69_raw}}",
+    "field_71": "{{2.field_71_raw}}",
+    "field_72": "{{2.field_72_raw}}",
+    "field_85": "{{2.field_85_raw}}",
+    "field_73": "{{2.field_73_raw}}",
+    "field_74": "{{2.field_74_raw}}",
+    "field_75": "{{2.field_75_raw}}",
+    "field_76": "{{2.field_76_raw}}",
+    "field_79": "{{2.field_79_raw}}",
+    "field_80": "{{2.field_80_raw}}",
+    "field_86": "{{2.field_86_raw}}",
+    "field_40": "{{2.field_40_raw}}",
+    "field_41": "{{2.field_41_raw}}",
+    "field_27": "{{2.field_27_raw}}",
+    "field_42": "{{2.field_42_raw}}",
+    "field_43": "{{2.field_43_raw}}",
+    "field_44": "{{2.field_44_raw}}",
+    "field_81": "{{2.field_81_raw}}",
+    "field_82": "{{2.field_82_raw}}",
+    "field_84": "{{2.field_84_raw}}",
+    "field_29": "{{2.field_29_raw}}",
+    "field_30": "{{2.field_30_raw}}",
+    "field_32": "{{2.field_32_raw}}",
+    "field_33": "{{2.field_33_raw}}",
+    "field_77": "{{2.field_77_raw}}",
+    "field_45": "{{2.field_45_raw}}",
+    "field_46": "{{2.field_46_raw}}",
+    "field_48": "{{2.field_48_raw}}",
+    "field_49": "{{2.field_49_raw}}",
+    "field_55": "{{2.field_55_raw}}",
+    "field_56": "{{2.field_56_raw}}",
+    "field_60": "{{2.field_60_raw}}",
+    "field_61": "{{2.field_61_raw}}",
+    "field_58": "{{2.field_58_raw}}",
+    "field_59": "{{2.field_59_raw}}",
+    "field_14": "{{2.field_14_raw}}",
+    "field_15": "{{2.field_15_raw}}",
+    "field_17": "{{2.field_17_raw}}",
+    "field_18": "{{2.field_18_raw}}",
+    "field_20": "{{2.field_20_raw}}",
+    "field_21": "{{2.field_21_raw}}"
+   }
+  },
+  {
+   "id": 4,
+   "module": "scenario-service:ReturnData",
+   "version": 2,
+   "parameters": {},
+   "mapper": {
+    "records": "{{3.array}}",
+    "count": "{{length(3.array)}}"
+   }
+  }
+ ],
+ "metadata": {
+  "version": 1
+ },
+ "scheduling": {
+  "type": "on-demand"
+ }
+}
