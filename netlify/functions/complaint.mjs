@@ -6,7 +6,7 @@ import { readOne, create, update } from "../lib/airtable.mjs";
 import { requirePerson, viewOf, can, statusAllowed, facilitators } from "../lib/access.mjs";
 import { detail, noticeAssigned, noticeUpdate, noticeStatus, noticeFeedback } from "../lib/complaints.mjs";
 
-const NOT_FOUND = json({ error: "That complaint was not found." }, 404);
+const NOT_FOUND = json({ error: "That request was not found." }, 404);
 const NO = () => json({ error: "You don't have access to do that." }, 403);
 const text = (v, max = 20000) => String(v ?? "").replace(/\r\n/g, "\n").trim().slice(0, max);
 const stars = (v) => { const n = Math.round(Number(v)); return n >= 1 && n <= 5 ? n : null; };
@@ -66,7 +66,7 @@ export default async (req) => {
     }
 
     if (action === "feedback") {
-      if (!can(me, "feedback", c)) return json({ error: "Feedback has already been sent for this complaint." }, 400);
+      if (!can(me, "feedback", c)) return json({ error: "Feedback has already been sent for this request." }, 400);
       const overall = stars(b.overall);
       if (!overall) return json({ error: "Choose a rating for the overall process." }, 400);
       await update("complaints", c.id, {

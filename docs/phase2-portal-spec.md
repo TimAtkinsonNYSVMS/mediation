@@ -41,7 +41,7 @@ Roles are re-read from People on every request (60-second cache). The cookie hol
 | Status changed | Active Staff |
 | Feedback left | Active Staff |
 
-Email goes through the Make webhook "Complaints portal - email" (Mandrill), with the same contract as the treasurer portal: `type: code | notify`. A failed notice never undoes the change that triggered it.
+Email goes through the Make webhook "Mediation portal - email" (Mandrill), with the same contract as the treasurer portal: `type: code | notify`. A failed notice never undoes the change that triggered it.
 
 ## Letters
 - The client fills placeholders from Letter Templates (`/api/templates`). Any unknown or empty placeholder stays visible in {braces}.

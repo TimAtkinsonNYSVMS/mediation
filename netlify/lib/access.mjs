@@ -1,4 +1,4 @@
-// Complaints portal access v01 (2026-11-04). Who is signed in and what they may see and do.
+// Mediation portal access v01 (2026-11-04). Who is signed in and what they may see and do.
 // The single place these rules live (docs/phase2-portal-spec.md); every endpoint asks here.
 // The person is re-read from People on every request (60-second cache), so unticking Active ends access.
 import { json, sessionEmail } from "./core.mjs";

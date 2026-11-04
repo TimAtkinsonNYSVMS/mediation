@@ -1,4 +1,4 @@
-// Complaints portal Airtable access v01 (2026-11-04). Field IDs, never names (see docs/airtable.md).
+// Mediation portal Airtable access v01 (2026-11-04). Field IDs, never names (see docs/airtable.md).
 // Base "Complaints Mediation". People and Letter Templates are cached for 60 seconds per function instance;
 // Complaints and Progress Updates are always read fresh.
 import { env } from "./core.mjs";

@@ -49,7 +49,7 @@ export default async (req) => {
     return json({ ok: true, n, complaint: c.id, ticket: seal({ c: c.id, exp: Date.now() + 30 * 60e3 }) });
   } catch (e) {
     console.error("intake", e.message);
-    return json({ error: "We couldn't save your complaint. Please try again, or email staff@nysvms.org." }, 502);
+    return json({ error: "We couldn't save your request. Please try again, or email staff@nysvms.org." }, 502);
   }
 };
 

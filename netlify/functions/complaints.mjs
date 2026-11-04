@@ -21,7 +21,7 @@ export default async (req) => {
     return json({ mine: mine.sort(byN), work: assigned.sort(byN) });
   } catch (e) {
     console.error("complaints", e.message);
-    return json({ error: "Could not load complaints. Please try again." }, 502);
+    return json({ error: "Could not load requests. Please try again." }, 502);
   }
 };
 

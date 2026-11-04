@@ -1,5 +1,5 @@
 // build-migrate-blueprint v01 (2026-11-04)
-// Generates make/migrate.blueprint.json for Make scenario "Complaints portal - Migrate (Knack → Airtable)".
+// Generates make/migrate.blueprint.json for Make scenario "Mediation portal - Migrate (Knack → Airtable)".
 // Run: node make/build-migrate-blueprint.mjs
 // Input `stage`: facilitators | complaints | updates. Run them in that order. Every write is an upsert, so reruns are safe.
 import { writeFileSync } from "node:fs";
@@ -143,7 +143,7 @@ const updateRoute = { flow: [
 ] };
 
 const blueprint = {
-  name: "Complaints portal - Migrate (Knack → Airtable)",
+  name: "Mediation portal - Migrate (Knack → Airtable)",
   flow: [
     { id: 1, module: "scenario-service:StartSubscenario", version: 2, metadata: { designer: { x: 0, y: 0 }, interface: [
       { name: "stage", label: "Stage", type: "text", required: true, help: "facilitators | complaints | updates — run in that order" }] } },

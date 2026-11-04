@@ -1,9 +1,9 @@
 {
-  "name": "nysvms-complaints-portal",
+  "name": "nysvms-mediation-portal",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "NYSVMS Complaints Mediation Portal (replaces the Knack complaints app)",
+  "description": "NYSVMS NYSVMS Mediation Portal (replaces the Knack complaints app)",
   "scripts": {
     "test": "node --test test/api.test.mjs",
     "dev": "node test/dev-server.mjs"

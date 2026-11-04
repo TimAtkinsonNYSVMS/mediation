@@ -1,4 +1,4 @@
-// Complaints portal server core v01 (2026-11-04). Responses, request checks and signed values. Copied from the treasurer portal.
+// Mediation portal server core v01 (2026-11-04). Responses, request checks and signed values. Copied from the treasurer portal.
 // Adapted from the volunteer portal's core (no Novi sign-in, no View as). The session is a signed cookie holding
 // the person's email; their role is re-read from Portal Users on every request (access.mjs).
 import { createHmac, timingSafeEqual } from "node:crypto";

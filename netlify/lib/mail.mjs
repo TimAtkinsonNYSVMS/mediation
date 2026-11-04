@@ -1,4 +1,4 @@
-// Complaints portal email v01 (2026-11-04). Copied from the treasurer portal. All email goes through the Make webhook "Complaints portal - email"
+// Mediation portal email v01 (2026-11-04). Copied from the treasurer portal. All email goes through the Make webhook "Mediation portal - email"
 // (Mandrill). type "code" is a sign-in code; type "notify" is a plain message to one or more people.
 // v02: notices carry an escaped HTML body built here, so names and notes can't inject markup.
 import { env } from "./core.mjs";

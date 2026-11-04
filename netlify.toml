@@ -1,4 +1,4 @@
-# Complaints portal v01 (2026-11-04)
+# Mediation portal v01 (2026-11-04)
 [build]
   publish = "public"
   functions = "netlify/functions"

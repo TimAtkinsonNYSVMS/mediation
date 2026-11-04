@@ -57,4 +57,4 @@ createServer(async (req, res) => {
     res.writeHead(404, { "content-type": "text/plain" });
     res.end("Not found");
   }
-}).listen(PORT, () => console.log(`Complaints portal test server on http://localhost:${PORT}`));
+}).listen(PORT, () => console.log(`Mediation portal test server on http://localhost:${PORT}`));

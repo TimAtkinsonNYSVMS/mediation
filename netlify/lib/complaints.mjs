@@ -1,11 +1,11 @@
-// Complaints portal domain v01 (2026-11-04). Shapes complaints for each kind of viewer, numbers new complaints,
+// Mediation portal domain v01 (2026-11-04). Shapes complaints for each kind of viewer, numbers new complaints,
 // and builds the notification emails that replaced the 5 Knack email rules (docs/phase2-portal-spec.md).
 import { env } from "./core.mjs";
 import { readTable, readByIds } from "./airtable.mjs";
 import { viewOf, can, activeStaff, statusAllowed, STATUSES } from "./access.mjs";
 import { notify } from "./mail.mjs";
 
-export const portalUrl = () => env("PORTAL_URL", "https://complaints.nysvms.org");
+export const portalUrl = () => env("PORTAL_URL", "https://mediation.nysvms.org");
 const first = (a) => (Array.isArray(a) ? a[0] : a) || null;
 const files = (list) => (list || []).map((f) => ({ id: f.id, filename: f.filename, size: f.size || 0, type: f.type || "" }));
 
@@ -72,31 +72,31 @@ const others = (list, me) => list.filter((p) => !me || p.email !== me.email);
 
 export async function noticeNewComplaint(c, owner) {
   const first = String(owner.name || "").split(" ")[0] || "there";
-  await notify([{ email: owner.email, name: owner.name }], "Your complaint about your veterinarian has been received",
-    `Dear ${first},\n\nThank you for choosing to use the NYSVMS Complaints Center. We have received your complaint about ${c.vet_name}, complaint #${c.n}.\n\n` +
-    `The next stage is that we will assign a volunteer veterinarian who will review your case, and you should hear from them shortly.\n\n` +
-    `You can check on your complaint at any time: ${portalUrl()}\nSign in with this email address and we will send you a code.\n\n` +
+  await notify([{ email: owner.email, name: owner.name }], "We have received your request for mediation",
+    `Dear ${first},\n\nThank you for contacting the NYSVMS mediation service. We have received your request about ${c.vet_name}, request #${c.n}.\n\n` +
+    `The next stage is that we will assign a volunteer veterinarian who will review your request, and you should hear from them shortly.\n\n` +
+    `You can check on your request at any time: ${portalUrl()}\nSign in with this email address and we will send you a code.\n\n` +
     `If you have any questions in the meantime, please email staff@nysvms.org.\n\nNew York State Veterinary Medical Society`);
-  await notify([{ email: env("STAFF_INBOX", "staff@nysvms.org"), name: "NYSVMS staff" }], `New complaint #${c.n}: ${c.subject}`,
-    `A new complaint has been filed.\n\nComplaint #${c.n}\nFrom: ${owner.name}\nAbout: ${c.vet_name}${c.practice ? `, ${c.practice}` : ""}\nSubject: ${c.subject}\n\nAssign a facilitator: ${link(c)}`);
+  await notify([{ email: env("STAFF_INBOX", "staff@nysvms.org"), name: "NYSVMS staff" }], `New mediation request #${c.n}: ${c.subject}`,
+    `A new mediation request has been filed.\n\nRequest #${c.n}\nFrom: ${owner.name}\nAbout: ${c.vet_name}${c.practice ? `, ${c.practice}` : ""}\nSubject: ${c.subject}\n\nAssign a facilitator: ${link(c)}`);
 }
 
 export async function noticeAssigned(c, fac, me) {
   const staff = others(await activeStaff(), me);
-  await notify([{ email: fac.email, name: fac.name }], `Complaint #${c.n} assigned to you for mediation`,
-    `New facilitator assignment for ${fac.name}.\n\nYou have been asked to facilitate complaint #${c.n}, received ${String(c.received || "").slice(0, 10)}.\nSubject: ${c.subject}\n\n` +
-    `Open it in the complaints portal: ${link(c)}\nSign in with this email address and we will send you a code.\n\nIf you have any questions or can't take this on, please reply to staff@nysvms.org.`);
-  if (staff.length) await notify(staff, `Complaint #${c.n} assigned to ${fac.name}`, `${me?.name || "Staff"} assigned complaint #${c.n} (${c.subject}) to ${fac.name}.\n\n${link(c)}`);
+  await notify([{ email: fac.email, name: fac.name }], `Request #${c.n} assigned to you for mediation`,
+    `New facilitator assignment for ${fac.name}.\n\nYou have been asked to facilitate mediation request #${c.n}, received ${String(c.received || "").slice(0, 10)}.\nSubject: ${c.subject}\n\n` +
+    `Open it in the mediation portal: ${link(c)}\nSign in with this email address and we will send you a code.\n\nIf you have any questions or can't take this on, please reply to staff@nysvms.org.`);
+  if (staff.length) await notify(staff, `Request #${c.n} assigned to ${fac.name}`, `${me?.name || "Staff"} assigned request #${c.n} (${c.subject}) to ${fac.name}.\n\n${link(c)}`);
 }
 
 export async function noticeUpdate(c, me, notes) {
-  await notify(others(await activeStaff(), me), `Update on complaint #${c.n}`, `${me.name} added an update to complaint #${c.n} (${c.subject}):\n\n${notes}\n\n${link(c)}`);
+  await notify(others(await activeStaff(), me), `Update on request #${c.n}`, `${me.name} added an update to request #${c.n} (${c.subject}):\n\n${notes}\n\n${link(c)}`);
 }
 
 export async function noticeStatus(c, me, status) {
-  await notify(others(await activeStaff(), me), `Complaint #${c.n} is now: ${status}`, `${me.name} changed the status of complaint #${c.n} (${c.subject}) to "${status}".\n\n${link(c)}`);
+  await notify(others(await activeStaff(), me), `Request #${c.n} is now: ${status}`, `${me.name} changed the status of request #${c.n} (${c.subject}) to "${status}".\n\n${link(c)}`);
 }
 
 export async function noticeFeedback(c) {
-  await notify(await activeStaff(), `Feedback received on complaint #${c.n}`, `The owner left feedback on complaint #${c.n} (${c.subject}).\n\n${link(c)}`);
+  await notify(await activeStaff(), `Feedback received on request #${c.n}`, `The owner left feedback on request #${c.n} (${c.subject}).\n\n${link(c)}`);
 }

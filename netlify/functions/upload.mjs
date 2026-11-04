@@ -22,7 +22,7 @@ export default async (req) => {
   if (!OK_TYPES.test(contentType)) return json({ error: "Please upload a PDF, Word document, photo or text file." }, 400);
   try {
     const c = await readOne("complaints", b.complaint);
-    if (!c) return json({ error: "That complaint was not found." }, 404);
+    if (!c) return json({ error: "That request was not found." }, 404);
     const ticket = unseal(b.ticket);
     const me = await personByEmail(sessionEmail(req));
     const byTicket = !!(ticket && ticket.c === c.id && FIELDS[b.field]);

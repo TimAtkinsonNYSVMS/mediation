@@ -1,4 +1,4 @@
-// Complaints portal one-time sign-in codes v01 (2026-11-04). Copied from the treasurer portal.
+// Mediation portal one-time sign-in codes v01 (2026-11-04). Copied from the treasurer portal.
 // A 6-digit code is emailed to anyone personByEmail() lets in. Only an HMAC of the code is stored (Sign-in Codes).
 import { createHmac, randomInt, timingSafeEqual } from "node:crypto";
 import { env } from "./core.mjs";

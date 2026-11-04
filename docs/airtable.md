@@ -1,4 +1,4 @@
-<!-- v02 (2026-11-04) -->
+<!-- v03 (2026-11-04) -->
 # Airtable: Complaints Mediation `appUbdZxOQ7WjyOYJ`
 
 Workspace: My First Workspace. Use field IDs, not names. The Knack ID columns hold the source record IDs, so the migration can be rerun safely.
@@ -23,7 +23,7 @@ One row per email address. A person can hold several roles: for example, Katie S
 | Complaints as facilitator (inverse of Complaints.Facilitator) | `fldT3ICxl0U5L0t3e` |
 | Progress updates authored (inverse of Progress Updates.Author) | `fldRjRBNQUzmj41k6` |
 
-## Complaints `tbl0FlFU8Xxn5UfK1` (Knack object_1)
+## Mediation Requests `tbl0FlFU8Xxn5UfK1` (Knack object_1; renamed from "Complaints" on 2026-11-04)
 
 | Field | ID | Knack |
 |---|---|---|

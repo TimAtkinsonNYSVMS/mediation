@@ -1,4 +1,4 @@
-// Complaints portal app v01 (2026-11-04). Plain JS, hash routes:
+// Mediation portal app v01 (2026-11-04). Plain JS, hash routes:
 //   #/ (home: public about page, or the signed-in person's lists)   #/file (public complaint form)   #/signin
 //   #/c/<id> (one complaint)   #/c/<id>/letter (draft a letter)   #/feedback/<id>   #/facilitators   #/letters   #/guide
 // All data comes from /api; every element is built with textContent, never HTML strings.
@@ -63,11 +63,11 @@ async function uploadFiles(files, extra) {
 
 // ---- header and tabs ----
 function tabsFor() {
-  if (!me) return [["#/", "About"], ["#/file", "File a complaint"], ["#/signin", "Sign in"]];
+  if (!me) return [["#/", "About"], ["#/file", "Request mediation"], ["#/signin", "Sign in"]];
   const t = [];
-  if (me.staff) t.push(["#/", "All complaints"], ["#/facilitators", "Facilitators"], ["#/letters", "Letter templates"]);
+  if (me.staff) t.push(["#/", "All requests"], ["#/facilitators", "Facilitators"], ["#/letters", "Letter templates"]);
   else if (me.facilitator) t.push(["#/", "My assignments"], ["#/guide", "Facilitator guide"]);
-  else t.push(["#/", "My complaints"]);
+  else t.push(["#/", "My requests"]);
   return t;
 }
 function renderHeader() {
@@ -106,14 +106,14 @@ window.addEventListener("hashchange", route);
 // ---- public pages ----
 function about() {
   show(
-    el("p", { class: "eyebrow", text: "Consumer complaint service" }),
+    el("p", { class: "eyebrow", text: "Mediation for pet owners" }),
     el("h1", { text: "Help understanding the care your animal received" }),
     el("p", { class: "lede", text: "NYSVMS volunteer veterinarians help pet owners understand the treatment provided by a veterinarian who is a member of the Society, and help communicate your concerns to them. We have no connection to the State licensing board and cannot impose penalties or remove licenses." }),
     el("div", { class: "cards" },
       el("div", { class: "card" }, el("h3", { text: "We can help with" }), el("p", { class: "small muted", text: "Questions about the diagnosis, treatment or communication you received from an NYSVMS member veterinarian." })),
       el("div", { class: "card" }, el("h3", { text: "Fees and billing" }), el("p", { class: "small muted", text: "We can't review what a practice charges. For a dispute about fees, contact a consumer protection organization." })),
       el("div", { class: "card" }, el("h3", { text: "Discipline" }), el("p", { class: "small muted", text: "For fines or license action, contact the NY State Office of the Professions, Office of Professional Discipline." }))),
-    el("div", { class: "row" }, el("a", { class: "btn", href: "#/file", text: "File a complaint" }), el("a", { class: "btn-outline", href: "#/signin", text: "Check on a complaint" })));
+    el("div", { class: "row" }, el("a", { class: "btn", href: "#/file", text: "Request mediation" }), el("a", { class: "btn-outline", href: "#/signin", text: "Check on a request" })));
 }
 
 function signIn() {
@@ -130,7 +130,7 @@ function signIn() {
       if (codeWrap.hidden) {
         await post("/api/auth/code-request", { email: email.value });
         codeWrap.hidden = false; btn.textContent = "Sign in"; code.focus();
-        msg.append(el("p", { class: "note", text: "If that email is linked to a complaint or a facilitator account, a code is on its way." }));
+        msg.append(el("p", { class: "note", text: "If that email is linked to a mediation request or a facilitator account, a code is on its way." }));
       } else {
         await post("/api/auth/code-verify", { email: email.value, code: code.value });
         me = await api("/api/auth/session"); location.hash = "#/"; route();
@@ -139,7 +139,7 @@ function signIn() {
     btn.disabled = false;
   });
   show(el("p", { class: "eyebrow", text: "Sign in" }), el("h1", { text: "We'll email you a code" }),
-    el("p", { class: "lede", text: "No password to remember. Enter the email you used when you filed your complaint, or the email NYSVMS has for you if you are a facilitator." }), form);
+    el("p", { class: "lede", text: "No password to remember. Enter the email you used when you requested mediation, or the email NYSVMS has for you if you are a facilitator." }), form);
 }
 
 function fileForm() {
@@ -148,13 +148,13 @@ function fileForm() {
     ["a_fees", "My complaint is not about fees or the cost of services."], ["a_member", "I have confirmed the veterinarian is a member of NYSVMS."],
     ["a_service", "I have read and understood how this service works (see About)."], ["a_terms", "I have read and accept the terms, including the indemnity."]];
   const msg = el("div");
-  const btn = el("button", { class: "btn", type: "submit", text: "Submit complaint" });
+  const btn = el("button", { class: "btn", type: "submit", text: "Submit request" });
   const form = el("form", { class: "grid2", novalidate: true },
     el("div", {},
       el("fieldset", {}, el("legend", { text: "Before you start" }), ATT.map(([k, t]) => el("div", { class: "check" }, el("input", { type: "checkbox", id: k }), el("label", { for: k, text: t })))),
       el("fieldset", {}, el("legend", { text: "The veterinarian" }), f("vet_name", "Veterinarian's name"), f("practice", "Practice name"), f("practice_address", "Practice address"),
         f("vet_email", "Veterinarian's email (if you have it)", "email"), el("p", { class: "hint", text: "Optional. It helps your facilitator reach them sooner." })),
-      el("fieldset", {}, el("legend", { text: "Your complaint" }), f("subject", "In one sentence, what is your complaint about?"), f("description", "What happened", "textarea"),
+      el("fieldset", {}, el("legend", { text: "Your request" }), f("subject", "In one sentence, what would you like help with?"), f("description", "What happened", "textarea"),
         el("label", { for: "uploads", text: "Records, photos or other documents (optional)" }), el("input", { id: "uploads", type: "file", multiple: true, accept: ".pdf,.doc,.docx,.jpg,.jpeg,.png,.heic,.txt" }),
         el("p", { class: "hint", text: "Up to 4 MB per file." }),
         el("div", { class: "check" }, el("input", { type: "checkbox", id: "records_ok" }), el("label", { for: "records_ok", text: "I give my veterinarian permission to share my pet's records with NYSVMS." })),
@@ -162,7 +162,7 @@ function fileForm() {
     el("div", {},
       el("div", { class: "panel" }, el("h2", { text: "About you" }), f("name", "Your name"), f("email", "Email", "email", { autocomplete: "email" }), f("phone", "Phone", "tel", { autocomplete: "tel" }), f("address", "Mailing address"),
         el("div", { class: "hp", "aria-hidden": "true" }, el("label", { for: "website", text: "Leave this empty" }), el("input", { id: "website", type: "text", tabindex: "-1", autocomplete: "off" })),
-        el("p", { class: "hint", text: "We email you a confirmation and your complaint number. Use this email to sign in and check on it later." }), msg,
+        el("p", { class: "hint", text: "We email you a confirmation and your request number. Use this email to sign in and check on it later." }), msg,
         el("div", { class: "row", style: "margin-top:18px" }, btn)),
       el("div", { class: "note", style: "margin-top:18px", text: "A volunteer veterinarian is usually assigned within two weeks. They will contact you directly." })));
   form.addEventListener("submit", async (e) => {
@@ -178,13 +178,13 @@ function fileForm() {
         failed.push(...(await uploadFiles([...$("uploads").files], { complaint: out.complaint, ticket: out.ticket, field: "uploads" })));
         failed.push(...(await uploadFiles([...$("release").files], { complaint: out.complaint, ticket: out.ticket, field: "release" })));
       }
-      show(el("p", { class: "eyebrow", text: "Complaint received" }), el("h1", { text: `Thank you. Your complaint number is #${out.n}.` }),
-        el("p", { class: "lede", text: "We've emailed you a confirmation. A volunteer veterinarian will be assigned and will contact you directly. You can check on your complaint at any time by signing in with your email." }),
-        failed.length ? el("div", { class: "err", text: `These files didn't upload: ${failed.join(", ")}. Please email them to staff@nysvms.org with your complaint number.` }) : null,
+      show(el("p", { class: "eyebrow", text: "Request received" }), el("h1", { text: `Thank you. Your request number is #${out.n}.` }),
+        el("p", { class: "lede", text: "We've emailed you a confirmation. A volunteer veterinarian will be assigned and will contact you directly. You can check on your request at any time by signing in with your email." }),
+        failed.length ? el("div", { class: "err", text: `These files didn't upload: ${failed.join(", ")}. Please email them to staff@nysvms.org with your request number.` }) : null,
         el("div", { class: "row" }, el("a", { class: "btn", href: "#/signin", text: "Sign in to check on it" })));
-    } catch (err) { msg.append(el("div", { class: "err", text: err.message })); btn.disabled = false; btn.textContent = "Submit complaint"; }
+    } catch (err) { msg.append(el("div", { class: "err", text: err.message })); btn.disabled = false; btn.textContent = "Submit request"; }
   });
-  show(el("p", { class: "eyebrow", text: "File a complaint" }), el("h1", { text: "Tell us what happened" }),
+  show(el("p", { class: "eyebrow", text: "Request mediation" }), el("h1", { text: "Tell us what happened" }),
     el("p", { class: "lede", text: "This takes about ten minutes. Please read About first: we can only help with NYSVMS member veterinarians, and not with fees or discipline." }), form);
 }
 
@@ -195,7 +195,7 @@ async function home() {
   const parts = [];
   if (me.staff || me.facilitator) {
     const open = work.filter((c) => !CLOSED.includes(c.status));
-    parts.push(el("p", { class: "eyebrow", text: me.staff ? "Staff" : "Facilitator" }), el("h1", { text: me.staff ? "All complaints" : "My assignments" }));
+    parts.push(el("p", { class: "eyebrow", text: me.staff ? "Staff" : "Facilitator" }), el("h1", { text: me.staff ? "All requests" : "My assignments" }));
     parts.push(me.staff
       ? el("div", { class: "cards" },
           card(work.filter((c) => c.status === "Awaiting assignment").length, "Need a facilitator", true),
@@ -214,8 +214,8 @@ async function home() {
     draw();
   }
   if (mine.length) {
-    parts.push(el("p", { class: "eyebrow", style: me.staff || me.facilitator ? "margin-top:40px" : "", text: "My complaints" }));
-    if (!me.staff && !me.facilitator) parts.push(el("h1", { text: `Welcome back, ${String(me.name).split(" ")[0]}` }), el("p", { class: "lede", text: "Here is where each of your complaints stands. Your facilitator will contact you directly by email or phone." }));
+    parts.push(el("p", { class: "eyebrow", style: me.staff || me.facilitator ? "margin-top:40px" : "", text: "My requests" }));
+    if (!me.staff && !me.facilitator) parts.push(el("h1", { text: `Welcome back, ${String(me.name).split(" ")[0]}` }), el("p", { class: "lede", text: "Here is where each of your mediation requests stands. Your facilitator will contact you directly by email or phone." }));
     for (const c of mine) parts.push(el("div", { class: "panel" },
       el("div", { class: "row between" }, el("h2", { style: "margin:0" }, el("a", { href: `#/c/${c.id}`, text: `#${c.n} · ${c.subject || "Complaint"}` })), statusChip(c.status)),
       el("p", { class: "muted small", text: `About ${c.vet_name}${c.practice ? ", " + c.practice : ""} · received ${fmtDate(c.received)}` }),
@@ -227,7 +227,7 @@ const card = (n, label, attn) => el("div", { class: "card" + (attn ? " attn" : "
 const steps = (s) => el("ol", { class: "steps" }, STEPS.map((t, i) => el("li", { class: i < stepIndex(s) ? "done" : i === stepIndex(s) ? "now" : "", text: t })));
 function table(rows, staff) {
   return el("div", { class: "tbl-wrap" }, el("table", {},
-    el("thead", {}, el("tr", {}, ["#", "Complaint", staff ? "Facilitator" : null, "Status", "Last activity"].filter(Boolean).map((h) => el("th", { text: h })))),
+    el("thead", {}, el("tr", {}, ["#", "Request", staff ? "Facilitator" : null, "Status", "Last activity"].filter(Boolean).map((h) => el("th", { text: h })))),
     el("tbody", {}, rows.map((c) => {
       const d = daysSince(c.last_activity), open = !CLOSED.includes(c.status);
       return el("tr", {}, el("td", { class: "num", text: String(c.n) }),
@@ -301,7 +301,7 @@ async function complaint(id) {
     [["Overall", c.feedback.overall], ["Facilitator", c.feedback.facilitator], ["Admin team", c.feedback.admin], ["Member value", c.feedback.value]].filter(([, v]) => v).map(([k, v]) => [el("dt", { text: k }), el("dd", { text: "★".repeat(v) + ` ${v} of 5` })])),
     c.feedback.comments ? el("p", { class: "story", text: c.feedback.comments }) : null) : null;
   const A = c.attestations;
-  show(back, el("p", { class: "eyebrow", style: "margin-top:14px", text: `Complaint #${c.n} · received ${fmtDate(c.received)}` }), el("h1", { text: c.subject || "Complaint" }),
+  show(back, el("p", { class: "eyebrow", style: "margin-top:14px", text: `Request #${c.n} · received ${fmtDate(c.received)}` }), el("h1", { text: c.subject || "Mediation request" }),
     el("div", { class: "row", style: "margin-bottom:18px" }, statusChip(c.status), el("span", { class: "muted small", text: `Facilitator: ${c.facilitator ? c.facilitator.name : "not assigned"}` })),
     el("div", { class: "grid2" },
       el("div", {},
@@ -313,10 +313,10 @@ async function complaint(id) {
 }
 
 function ownerView(c) {
-  const parts = [el("a", { class: "btn-small", href: "#/", text: "← My complaints" }),
-    el("p", { class: "eyebrow", style: "margin-top:14px", text: `Complaint #${c.n} · received ${fmtDate(c.received)}` }), el("h1", { text: c.subject || "Your complaint" }),
+  const parts = [el("a", { class: "btn-small", href: "#/", text: "← My requests" }),
+    el("p", { class: "eyebrow", style: "margin-top:14px", text: `Request #${c.n} · received ${fmtDate(c.received)}` }), el("h1", { text: c.subject || "Your request" }),
     el("div", { class: "panel" }, el("div", { class: "row between" }, el("h2", { style: "margin:0", text: "Where it stands" }), statusChip(c.status)), steps(c.status),
-      c.facilitator ? el("p", {}, "Your facilitator: ", el("strong", { text: c.facilitator.name }), ". They will contact you directly.") : el("p", { class: "muted", text: "We are finding a volunteer veterinarian for your complaint." }),
+      c.facilitator ? el("p", {}, "Your facilitator: ", el("strong", { text: c.facilitator.name }), ". They will contact you directly.") : el("p", { class: "muted", text: "We are finding a volunteer veterinarian for your request." }),
       c.status === "Completed" && c.resolution ? el("p", {}, el("strong", { text: "Resolution: " }), c.resolution) : null,
       c.can_feedback ? el("a", { class: "btn", href: `#/feedback/${c.id}`, text: "Tell us how it went" }) : c.feedback_given ? el("p", { class: "note", text: "Thank you for your feedback." }) : null),
     el("div", { class: "panel" }, el("h2", { text: "What you told us" }), el("p", { class: "muted small", text: `About ${c.vet_name}${c.practice ? ", " + c.practice : ""}` }), el("p", { class: "story", text: c.description }),
@@ -358,8 +358,8 @@ async function letter(id) {
     catch (err) { toast(err.message, true); e.target.disabled = false; }
   };
   show(el("a", { class: "btn-small", href: `#/c/${c.id}`, text: `← Back to #${c.n}` }),
-    el("p", { class: "eyebrow", style: "margin-top:14px", text: `Complaint #${c.n}` }), el("h1", { text: "Draft a letter" }),
-    el("p", { class: "lede", text: "Pick a letter. The complaint's details are filled in for you. Edit it, then copy it into your own email. Anything still in {braces} needs your attention before sending." }),
+    el("p", { class: "eyebrow", style: "margin-top:14px", text: `Request #${c.n}` }), el("h1", { text: "Draft a letter" }),
+    el("p", { class: "lede", text: "Pick a letter. The request's details are filled in for you. Edit it, then copy it into your own email. Anything still in {braces} needs your attention before sending." }),
     el("div", { class: "grid2" },
       el("div", { class: "panel" }, el("label", { for: "lt", style: "margin-top:0", text: "Letter" }), pick, el("label", { for: "lt-to", text: "To" }), to,
         el("label", { for: "lt-sub", text: "Subject" }), subj, el("label", { for: "lt-body", text: "Letter" }), body, left,
@@ -380,7 +380,7 @@ async function feedback(id) {
   const comments = el("textarea", { id: "fb-c" });
   const msg = el("div");
   const form = el("form", { class: "panel", style: "max-width:640px" },
-    el("label", { text: "Overall, how satisfied were you with the NYSVMS complaints process?" }), stars("overall"),
+    el("label", { text: "Overall, how satisfied were you with the NYSVMS mediation process?" }), stars("overall"),
     el("label", { text: "How satisfied were you with the support from your facilitator?" }), stars("facilitator"),
     el("label", { text: "How satisfied were you with the support from the NYSVMS staff?" }), stars("admin"),
     el("label", { text: "How valuable was this service to you?" }), stars("value"),
@@ -391,14 +391,14 @@ async function feedback(id) {
     try { await post("/api/complaint/feedback", { id: c.id, ...val, comments: comments.value }); toast("Feedback sent. Thank you."); location.hash = `#/c/${c.id}`; }
     catch (err) { msg.append(el("div", { class: "err", text: err.message })); }
   });
-  show(el("p", { class: "eyebrow", text: `Complaint #${c.n}` }), el("h1", { text: "How did we do?" }), form);
+  show(el("p", { class: "eyebrow", text: `Request #${c.n}` }), el("h1", { text: "How did we do?" }), form);
 }
 
 // ---- staff pages ----
 async function facilitatorList() {
   const facs = await api("/api/facilitators");
   show(el("p", { class: "eyebrow", text: "Staff" }), el("h1", { text: "Facilitators" }),
-    el("p", { class: "lede", text: `Volunteer veterinarians who mediate complaints. ${facs.filter((f) => f.active).length} are active. To add someone or change their region, edit the People table in Airtable (Roles: Facilitator, Active ticked).` }),
+    el("p", { class: "lede", text: `Volunteer veterinarians who mediate requests. ${facs.filter((f) => f.active).length} are active. To add someone or change their region, edit the People table in Airtable (Roles: Facilitator, Active ticked).` }),
     el("div", { class: "tbl-wrap" }, el("table", {}, el("thead", {}, el("tr", {}, ["Name", "Region", "Open", "All time", "Status"].map((h) => el("th", { text: h })))),
       el("tbody", {}, facs.map((f) => el("tr", {}, el("td", {}, f.name, el("div", { class: "small muted", text: f.email })), el("td", { text: f.region || "—" }),
         el("td", { class: "num", text: String(f.open) }), el("td", { class: "num", text: String(f.total) }), el("td", {}, el("span", { class: "chip " + (f.active ? "ok" : "neutral"), text: f.active ? "Active" : "Inactive" }))))))));
@@ -406,14 +406,14 @@ async function facilitatorList() {
 async function letterList() {
   const t = await api("/api/templates");
   show(el("p", { class: "eyebrow", text: "Staff" }), el("h1", { text: "Letter templates" }),
-    el("p", { class: "lede", text: "The letters facilitators can draft. Words in {braces} are filled in from the complaint. To change the wording, edit the Letter Templates table in Airtable; changes show here within a minute." }),
+    el("p", { class: "lede", text: "The letters facilitators can draft. Words in {braces} are filled in from the request. To change the wording, edit the Letter Templates table in Airtable; changes show here within a minute." }),
     el("div", { class: "stack" }, t.map((x) => el("div", { class: "panel" }, el("div", { class: "row between" }, el("h3", { text: x.type }), el("span", { class: "chip neutral", text: x.recipient === "Owner" ? "To owner" : "To veterinarian" })),
       el("p", { class: "small muted", style: "margin:6px 0 0", text: `Subject: ${x.subject}` }), el("details", { class: "letter-text" }, el("summary", { text: "Show the letter" }), el("pre", { text: x.body }))))));
 }
 function guide() {
   show(el("p", { class: "eyebrow", text: "Facilitator guide" }), el("h1", { text: "How mediation works" }),
     el("ol", { class: "lede", style: "padding-left:20px" },
-      el("li", { text: "Staff ask you to take a complaint. You get an email and it appears under My assignments." }),
+      el("li", { text: "Staff ask you to take a mediation request. You get an email and it appears under My assignments." }),
       el("li", { text: "Introduce yourself to the owner, then to the veterinarian, using Draft a letter." }),
       el("li", { text: "Log each call or email as an update so staff can see where things stand, and keep the status current." }),
       el("li", { text: "When it's resolved, record the resolution, set the status to Completed and send the two resolution letters. The owner's letter includes a feedback link." })),

@@ -1,5 +1,5 @@
 {
- "name": "Complaints portal - Migrate (Knack → Airtable)",
+ "name": "Mediation portal - Migrate (Knack → Airtable)",
  "flow": [
   {
    "id": 1,
