@@ -1,4 +1,4 @@
-<!-- v02 (2026-11-04) -->
+<!-- v03 (2026-11-04) -->
 # NYSVMS Mediation Portal: rules for Claude
 
 This portal replaces the Knack app "NYSVMS Complaints Process" (app `5a622d7763fc886409098318`). README.md covers the stack and phases, `docs/airtable.md` has every field ID, and `docs/phase0-audit.md` covers what Knack holds and how it behaves.
@@ -6,7 +6,9 @@ This portal replaces the Knack app "NYSVMS Complaints Process" (app `5a622d7763f
 **This app holds sensitive personal data:** pet owners' names, addresses and phone numbers, complaints about named veterinarians, and medical records. Treat every record as confidential.
 
 ## Where things live
-- **Code:** this repo (`C:\Users\TimAtkinson\nysvms-mediation-portal`). It isn't on GitHub yet: Tim creates the repo (gh isn't installed).
+- **Code:** this repo (`C:UsersTimAtkinson
+ysvms-mediation-portal`). GitHub: `TimAtkinsonNYSVMS/mediation` (private), branch `main`.
+- **Hosting:** Netlify site `nysvms-mediation` (site ID `cc638529-3a34-414e-becb-708acc07b16e`, team tatkinsonnysvms), https://nysvms-mediation.netlify.app until mediation.nysvms.org is set up. It deploys on every push to `main` once Tim links the repo in Netlify. Settings are for the production context only: SESSION_SECRET, CM_WEBHOOK_SECRET, CM_MAIL_WEBHOOK_URL, PORTAL_URL, STAFF_INBOX, and AIRTABLE_TOKEN (Tim adds it).
 - **Data:** Airtable base `appUbdZxOQ7WjyOYJ`. Tables: People, Complaints, Progress Updates, Letter Templates, Sign-in Codes.
 - **Knack (source until cutover):** read only, through Make **5021492** (`object_id`, `limit`). Never write to Knack.
 - **Make:**
