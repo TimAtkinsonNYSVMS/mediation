@@ -151,7 +151,7 @@ function signIn() {
 function fileForm() {
   const f = (id, label, type = "text", attrs = {}) => [el("label", { for: id, text: label }), el(type === "textarea" ? "textarea" : "input", { id, ...(type === "textarea" ? {} : { type }), ...attrs })];
   const ATT = [["a_legal", "I have not taken any legal action about this."], ["a_opd", "I have not complained to the NYS Office of Professional Discipline."],
-    ["a_fees", "My complaint is not about fees or the cost of services."], ["a_member", "I have confirmed the veterinarian is a member of NYSVMS."],
+    ["a_fees", "My request is not about fees or the cost of services."], ["a_member", "I have confirmed the veterinarian is a member of NYSVMS."],
     ["a_service", "I have read and understood how this service works (see About)."], ["a_terms", "I have read and accept the terms, including the indemnity."]];
   const msg = el("div");
   const btn = el("button", { class: "btn", type: "submit", text: "Submit request" });
@@ -224,7 +224,7 @@ async function home() {
     parts.push(el("p", { class: "eyebrow", style: me.staff || me.facilitator ? "margin-top:40px" : "", text: "My requests" }));
     if (!me.staff && !me.facilitator) parts.push(el("h1", { text: `Welcome back, ${String(me.name).split(" ")[0]}` }), el("p", { class: "lede", text: "Here is where each of your mediation requests stands. Your facilitator will contact you directly by email or phone." }));
     for (const c of mine) parts.push(el("div", { class: "panel" },
-      el("div", { class: "row between" }, el("h2", { style: "margin:0" }, el("a", { href: `#/c/${c.id}`, text: `#${c.n} · ${c.subject || "Complaint"}` })), statusChip(c.status)),
+      el("div", { class: "row between" }, el("h2", { style: "margin:0" }, el("a", { href: `#/c/${c.id}`, text: `#${c.n} · ${c.subject || "Mediation request"}` })), statusChip(c.status)),
       el("p", { class: "muted small", text: `About ${c.vet_name}${c.practice ? ", " + c.practice : ""} · received ${fmtDate(c.received)}` }),
       steps(c.status), c.facilitator ? el("p", { class: "small" }, "Your facilitator: ", el("strong", { text: c.facilitator })) : null));
   }
@@ -299,7 +299,7 @@ async function complaint(id) {
     } })));
   const res = el("input", { id: "res", type: "text", value: c.resolution });
   const resNotes = el("textarea", { id: "res-n" }); resNotes.value = c.resolution_notes;
-  const resPanel = el("div", { class: "panel" }, el("h2", { text: "Resolution" }), el("label", { for: "res", text: "Resolution (the owner sees this once the complaint is Completed)" }), res,
+  const resPanel = el("div", { class: "panel" }, el("h2", { text: "Resolution" }), el("label", { for: "res", text: "Resolution (the owner sees this once the request is Completed)" }), res,
     el("label", { for: "res-n", text: "Notes for staff" }), resNotes,
     el("div", { class: "row", style: "margin-top:10px" }, el("button", { class: "btn-small", type: "button", text: "Save resolution", onclick: async () => {
       try { await post("/api/complaint/resolution", { id: c.id, resolution: res.value, resolution_notes: resNotes.value }); toast("Resolution saved"); } catch (err) { toast(err.message, true); }
