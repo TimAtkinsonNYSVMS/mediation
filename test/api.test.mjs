@@ -25,7 +25,9 @@ test("an owner with no role signs in by emailed code; the code is stored only as
   let r = await post("auth-code", "/api/auth/code-request", { email: " Jordan@Example.org " });
   assert.equal(r.status, 200);
   const mail = SENT.at(-1);
-  assert.deepEqual([mail.type, mail.to, mail.secret], ["code", EMAILS.owner, "hook-secret"]);
+  assert.deepEqual([mail.type, mail.to[0].email, mail.secret], ["notify", EMAILS.owner, "hook-secret"]);
+  assert.match(mail.subject, new RegExp(mail.code));
+  assert.ok(mail.html.includes(mail.code) && mail.html.includes("New York State Veterinary Medical Society"), "branded code email");
   assert.ok(!JSON.stringify(CODE_ROWS).includes(mail.code));
   r = await post("auth-code", "/api/auth/code-verify", { email: EMAILS.owner, code: mail.code });
   assert.equal(r.status, 200);

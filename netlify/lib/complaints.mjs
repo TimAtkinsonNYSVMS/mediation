@@ -1,4 +1,5 @@
-// Mediation portal domain v04 (2026-11-06). v04: new status names; possible duplicates (same owner, same vet, within 14 days).
+// Mediation portal domain v05 (2026-11-06). v05: branded emails (mail.mjs render) and links to mediation.nysvms.org.
+// v04 (2026-11-06). v04: new status names; possible duplicates (same owner, same vet, within 14 days).
 // v03 (2026-11-06). v03: next_step in staff/facilitator lists and detail.
 // v02 (2026-11-06). v02: owner-facing status names, "what's happening" text and the owner Activity list
 // (built here from fixed sentences, never from notes). v01 (2026-11-04). Shapes complaints for each kind of viewer, numbers new complaints,
@@ -6,10 +7,11 @@
 import { env } from "./core.mjs";
 import { readTable, readByIds } from "./airtable.mjs";
 import { viewOf, can, activeStaff, statusAllowed, STATUSES } from "./access.mjs";
-import { notify } from "./mail.mjs";
+import { notify, publicUrl } from "./mail.mjs";
 import { CLOSED } from "./statuses.mjs";
 
-export const portalUrl = () => env("PORTAL_URL", "https://mediation.nysvms.org");
+// Links in emails use the public address (mediation.nysvms.org). PORTAL_URL stays the Novi sign-in's return address (sso.mjs).
+export const portalUrl = publicUrl;
 const first = (a) => (Array.isArray(a) ? a[0] : a) || null;
 const files = (list) => (list || []).map((f) => ({ id: f.id, filename: f.filename, size: f.size || 0, type: f.type || "" }));
 
@@ -127,36 +129,77 @@ export async function nextNumber() {
 }
 
 // ---- notices (never throw) ----
+// v05 (2026-11-06): every notice uses the branded layout in mail.mjs; links go to PUBLIC_URL (mediation.nysvms.org).
 const link = (c) => `${portalUrl()}/#/c/${c.id}`;
 const others = (list, me) => list.filter((p) => !me || p.email !== me.email);
+const day = (d) => (d ? new Date(d).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "America/New_York" }) : "");
+const vetLine = (c) => [c.vet_name, c.practice].filter(Boolean).join(", ");
+const givenName = (n) => String(n || "").trim().split(/\s+/)[0] || "";
+const drName = (n) => (/^dr\.?\s/i.test(String(n || "")) ? String(n).replace(/^dr\.?\s+/i, "Dr. ") : n);
 
 export async function noticeNewComplaint(c, owner) {
-  const first = String(owner.name || "").split(" ")[0] || "there";
-  await notify([{ email: owner.email, name: owner.name }], "We have received your request for mediation",
-    `Dear ${first},\n\nThank you for contacting the NYSVMS mediation service. We have received your request about ${c.vet_name}, request #${c.n}.\n\n` +
-    `The next stage is that we will assign a volunteer veterinarian who will review your request, and you should hear from them shortly.\n\n` +
-    `You can check on your request at any time: ${portalUrl()}\nSign in with this email address and we will send you a code.\n\n` +
-    `If you have any questions in the meantime, please email staff@nysvms.org.\n\nNew York State Veterinary Medical Society`);
-  await notify([{ email: env("STAFF_INBOX", "staff@nysvms.org"), name: "NYSVMS staff" }], `New mediation request #${c.n}: ${c.subject}`,
-    `A new mediation request has been filed.\n\nRequest #${c.n}\nFrom: ${owner.name}\nAbout: ${c.vet_name}${c.practice ? `, ${c.practice}` : ""}\nSubject: ${c.subject}\n\nAssign a facilitator: ${link(c)}`);
+  await notify([{ email: owner.email, name: owner.name }], `We've received your mediation request (#${c.n})`, {
+    eyebrow: "Mediation request received", heading: "Thank you. We've received your request.",
+    greeting: givenName(owner.name) ? `Dear ${givenName(owner.name)},` : "Hello,",
+    paras: ["Thank you for contacting the NYSVMS mediation service. Here are the details of your request."],
+    details: [["Request number", `#${c.n}`], ["About", vetLine(c)], ["Subject", c.subject], ["Received", day(c.received)]],
+    button: { label: "Check on your request", url: `${portalUrl()}/#/signin` },
+    after: [
+      "What happens next: we'll assign a volunteer veterinarian, your facilitator, usually within two weeks. They will contact you directly by email or phone.",
+      "To check on your request, sign in with this email address and we'll send you a code. No password needed.",
+      `Questions? Email staff@nysvms.org and mention request #${c.n}.`]
+  });
+  await notify([{ email: env("STAFF_INBOX", "staff@nysvms.org"), name: "NYSVMS staff" }], `New mediation request #${c.n}: ${c.subject}`, {
+    eyebrow: "Staff", heading: `New mediation request #${c.n}`,
+    paras: ["A new mediation request has been filed and needs a facilitator."],
+    details: [["Request", `#${c.n}`], ["From", owner.name], ["About", vetLine(c)], ["Subject", c.subject], ["Received", day(c.received)]],
+    button: { label: "Assign a facilitator", url: link(c) }
+  });
 }
 
 export async function noticeAssigned(c, fac, me) {
   const staff = others(await activeStaff(), me);
-  await notify([{ email: fac.email, name: fac.name }], `Request #${c.n} assigned to you for mediation`,
-    `New facilitator assignment for ${fac.name}.\n\nYou have been asked to facilitate mediation request #${c.n}, received ${String(c.received || "").slice(0, 10)}.\nSubject: ${c.subject}\n\n` +
-    `Open it in the mediation portal: ${link(c)}\nSign in with this email address and we will send you a code.\n\nIf you have any questions or can't take this on, please reply to staff@nysvms.org.`);
-  if (staff.length) await notify(staff, `Request #${c.n} assigned to ${fac.name}`, `${me?.name || "Staff"} assigned request #${c.n} (${c.subject}) to ${fac.name}.\n\n${link(c)}`);
+  await notify([{ email: fac.email, name: fac.name }], `Request #${c.n} assigned to you for mediation`, {
+    eyebrow: "New assignment", heading: `You've been asked to facilitate request #${c.n}`,
+    greeting: `Dear ${drName(fac.name) || "facilitator"},`,
+    paras: ["Thank you for volunteering. NYSVMS staff have asked you to facilitate this mediation request."],
+    details: [["Request", `#${c.n}`], ["Subject", c.subject], ["About", vetLine(c)], ["Received", day(c.received)]],
+    button: { label: "Open the request", url: link(c) },
+    after: ["Sign in with this email address (we'll send you a code), or with your NYSVMS account.",
+      "If you can't take this on, or have any questions, please email staff@nysvms.org."]
+  });
+  if (staff.length) await notify(staff, `Request #${c.n} assigned to ${fac.name}`, {
+    eyebrow: "Staff", heading: `Request #${c.n} assigned to ${fac.name}`,
+    paras: [`${me?.name || "Staff"} assigned this request. The facilitator has been emailed.`],
+    details: [["Request", `#${c.n}`], ["Subject", c.subject], ["Facilitator", fac.name]],
+    button: { label: "Open the request", url: link(c) }
+  });
 }
 
 export async function noticeUpdate(c, me, notes) {
-  await notify(others(await activeStaff(), me), `Update on request #${c.n}`, `${me.name} added an update to request #${c.n} (${c.subject}):\n\n${notes}\n\n${link(c)}`);
+  await notify(others(await activeStaff(), me), `Update on request #${c.n}`, {
+    eyebrow: "Staff", heading: `Update on request #${c.n}`,
+    paras: [`${me.name} added an update.`],
+    details: [["Request", `#${c.n}`], ["Subject", c.subject]],
+    quote: { label: "The update", text: notes },
+    button: { label: "Open the request", url: link(c) }
+  });
 }
 
 export async function noticeStatus(c, me, status) {
-  await notify(others(await activeStaff(), me), `Request #${c.n} is now: ${status}`, `${me.name} changed the status of request #${c.n} (${c.subject}) to "${status}".\n\n${link(c)}`);
+  await notify(others(await activeStaff(), me), `Request #${c.n} is now: ${status}`, {
+    eyebrow: "Staff", heading: `Request #${c.n} is now ${status}`,
+    paras: [`${me.name} changed the status.`],
+    details: [["Request", `#${c.n}`], ["Subject", c.subject], ["Was", c.status || "Awaiting assignment"], ["Now", status]],
+    button: { label: "Open the request", url: link(c) }
+  });
 }
 
 export async function noticeFeedback(c) {
-  await notify(await activeStaff(), `Feedback received on request #${c.n}`, `The owner left feedback on request #${c.n} (${c.subject}).\n\n${link(c)}`);
+  await notify(await activeStaff(), `Feedback received on request #${c.n}`, {
+    eyebrow: "Staff", heading: `Feedback received on request #${c.n}`,
+    paras: ["The owner has sent feedback on how the mediation went."],
+    details: [["Request", `#${c.n}`], ["Subject", c.subject]],
+    button: { label: "Read the feedback", url: link(c) }
+  });
 }

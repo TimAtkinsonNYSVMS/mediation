@@ -130,6 +130,7 @@ export function setupEnv() {
   process.env.CM_MAIL_WEBHOOK_URL = MAIL_HOOK;
   process.env.CM_WEBHOOK_SECRET = "hook-secret";
   process.env.PORTAL_URL = "https://complaints.example.test";
+  process.env.PUBLIC_URL = "https://complaints.example.test";
   process.env.STAFF_INBOX = "inbox@example.org";
   globalThis.fetch = fakeFetch;
 }

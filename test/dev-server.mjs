@@ -8,10 +8,11 @@ import { setupEnv, SENT, EMAILS, MAIL_HOOK } from "./fixtures.mjs";
 
 setupEnv();
 process.env.PORTAL_URL = `http://localhost:${process.env.PORT || 8892}`;
+process.env.PUBLIC_URL = process.env.PORTAL_URL;
 const fake = globalThis.fetch;
 globalThis.fetch = async (url, opts) => {
   const out = await fake(url, opts);
-  if (String(url) === MAIL_HOOK) { const m = SENT.at(-1); console.log(m.type === "code" ? `[test] code for ${m.to}: ${m.code}` : `[test] email to ${m.to.map((t) => t.email).join(", ")}: ${m.subject}`); }
+  if (String(url) === MAIL_HOOK) { const m = SENT.at(-1); console.log(m.code ? `[test] code for ${m.to[0].email}: ${m.code}` : `[test] email to ${m.to.map((t) => t.email).join(", ")}: ${m.subject}`); }
   return out;
 };
 
