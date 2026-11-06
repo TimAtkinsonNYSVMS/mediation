@@ -29,7 +29,7 @@ One row per email address. A person can hold several roles: for example, Katie S
 |---|---|---|
 | Complaint # (primary, number; new = max + 1) | `fldg11sJnOcSL9isq` | field_2 |
 | Received | `fldf529tftYjMmXTz` | field_66 |
-| Status | `flduLBEGv02ch9cDn` | field_54 (adds "Withdrawn") |
+| Status (renamed 2026-11-06: Awaiting assignment, Facilitator assigned, Mediation in progress, Waiting on the veterinarian, Waiting on the owner, Completed, Closed without resolution. The portal also reads the old Knack names, see netlify/lib/statuses.mjs) | `flduLBEGv02ch9cDn` | field_54 |
 | Owner (link → People) | `fldBXPZ7L6s29trcD` | field_19 |
 | Facilitator (link → People) | `fldcuf96LhF1XKlaV` | field_39 |
 | Subject | `fldn8dv0UnA0sDLfh` | field_1 |

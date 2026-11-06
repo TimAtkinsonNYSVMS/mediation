@@ -1,4 +1,5 @@
-// GET /api/complaint?id=rec… and POST /api/complaint/<action> · v04 (2026-11-06). v04: update can also set the status and
+// GET /api/complaint?id=rec… and POST /api/complaint/<action> · v05 (2026-11-06). v05: new status names; close_unresolved (staff only,
+// "Closed without resolution", never emails the owner). v04 (2026-11-06). v04: update can also set the status and
 // the next step in the same save; close (resolution + Completed in one step); vet_email; next_step. v03 (2026-11-06). v03: updates record a Type and With;
 // status changes and assignments write a dated Progress Update row (feeds the owner Activity list). v02 (2026-11-04). v02: every action is refused while viewing as someone.
 // Actions: update (log progress, optionally a drafted letter, status, next step), status, resolution, close, vet_email, next_step, assign, feedback.
@@ -82,6 +83,17 @@ export default async (req) => {
       return json({ ok: true });
     }
 
+    if (action === "close_unresolved") {
+      if (!can(me, "assign", c)) return NO();
+      const reason = text(b.reason, 500);
+      if (!reason) return json({ error: "Say why it's being closed." }, 400);
+      if (c.status === "Closed without resolution") return json({ ok: true });
+      await update("complaints", c.id, { status: "Closed without resolution", next_step: "" });
+      await create("updates", { complaint: [c.id], author: [me.id], date: now(), type: "Status change", status_set: "Closed without resolution", notes: `Closed without resolution: ${reason}` });
+      await noticeStatus(c, me, "Closed without resolution"); // staff only; owners are never emailed when a request is closed without resolution
+      return json({ ok: true });
+    }
+
     if (action === "vet_email") {
       if (!can(me, "work", c)) return NO();
       const email = text(b.email, 200).toLowerCase();
@@ -102,7 +114,7 @@ export default async (req) => {
       const fac = (await facilitators()).find((f) => f.id === b.facilitator && f.active);
       if (!fac) return json({ error: "Choose an active facilitator." }, 400);
       if ((c.facilitator || []).includes(fac.id)) return json({ ok: true });
-      const status = ["Awaiting assignment", "Asking mediator to accept"].includes(c.status || "Awaiting assignment") ? "Mediator Assigned" : c.status;
+      const status = (c.status || "Awaiting assignment") === "Awaiting assignment" ? "Facilitator assigned" : c.status;
       await update("complaints", c.id, { facilitator: [fac.id], status });
       await create("updates", { complaint: [c.id], author: [me.id], date: now(), type: "Assigned", status_set: fac.name, notes: `${fac.name} assigned as facilitator by ${me.name}` });
       await noticeAssigned({ ...c, status }, fac, me);

@@ -50,7 +50,7 @@ test("the session reports roles from People", async () => {
 
 test("lists: staff see all, facilitators their assignments, owners their own", async () => {
   const nums = async (email) => { const b = await (await get("complaints", "/api/complaints", email)).json(); return { mine: b.mine.map((c) => c.n), work: b.work.map((c) => c.n) }; };
-  assert.deepEqual(await nums(EMAILS.staff), { mine: [], work: [321, 318, 309, 297] });
+  assert.deepEqual(await nums(EMAILS.staff), { mine: [], work: [322, 321, 318, 309, 297] });
   assert.deepEqual(await nums(EMAILS.fac), { mine: [], work: [318, 309] });
   assert.deepEqual(await nums(EMAILS.owner), { mine: [318, 309], work: [] });
   const owned = (await (await get("complaints", "/api/complaints", EMAILS.owner)).json()).mine[0];
@@ -104,7 +104,7 @@ test("assigning: staff only, active facilitators only; the facilitator is emaile
   const n = SENT.length;
   assert.equal((await post("complaint", "/api/complaint/assign", { id: IDS.cNew, facilitator: IDS.fac2 }, EMAILS.staff)).status, 200);
   assert.deepEqual(complaintRow(IDS.cNew).fields[F.C.fac], [IDS.fac2]);
-  assert.deepEqual(complaintRow(IDS.cNew).fields[F.C.status], { name: "Mediator Assigned" });
+  assert.deepEqual(complaintRow(IDS.cNew).fields[F.C.status], { name: "Facilitator assigned" });
   assert.equal(SENT[n].to[0].email, EMAILS.fac2);
   assert.match(SENT[n].text, /complaints\.example\.test\/#\/c\/recCMP00000000001/);
   fresh();
@@ -129,7 +129,7 @@ test("intake: validates, numbers the complaint, reuses an existing person, email
   assert.deepEqual(await (await post("intake", "/api/intake", { ...good, website: "spam" })).json(), { ok: true, n: 0 });
   const n = SENT.length;
   const out = await (await post("intake", "/api/intake", good)).json();
-  assert.equal(out.n, 322);
+  assert.equal(out.n, 323);
   assert.equal(RECORDS.tblMC3vdByJkY9jEC.length, people, "existing owner reused");
   const c = complaintRow(out.complaint);
   assert.deepEqual([c.fields[F.C.owner], c.fields[F.C.status]], [[IDS.owner], { name: "Awaiting assignment" }]);
@@ -181,9 +181,9 @@ test("owner Activity: fixed sentences only, never notes; status changes and assi
   // a facilitator logs a call with the vet and a private note, and changes the status
   await post("complaint", "/api/complaint/update", { id: IDS.cMine, notes: "PRIVATE: vet sounded defensive", type: "Call", with: "Veterinarian" }, EMAILS.fac);
   await post("complaint", "/api/complaint/update", { id: IDS.cMine, notes: "PRIVATE second note", type: "Note" }, EMAILS.fac);
-  await post("complaint", "/api/complaint/status", { id: IDS.cMine, status: "Mediator waiting for veterinarian to respond" }, EMAILS.fac);
+  await post("complaint", "/api/complaint/status", { id: IDS.cMine, status: "Waiting on the veterinarian" }, EMAILS.fac);
   const row = RECORDS.tblzyvyYFymTo4xR6.at(-1);
-  assert.deepEqual([row.fields.fld3vGp10i4Rtbmjo, row.fields.fldenMKQCNzFzAtS3], [{ name: "Status change" }, "Mediator waiting for veterinarian to respond"]);
+  assert.deepEqual([row.fields.fld3vGp10i4Rtbmjo, row.fields.fldenMKQCNzFzAtS3], [{ name: "Status change" }, "Waiting on the veterinarian"]);
   const r = await get("complaint", `/api/complaint?id=${IDS.cMine}`, EMAILS.owner);
   const body = await r.text();
   assert.ok(!body.includes("PRIVATE"), "notes never reach the owner");
@@ -232,4 +232,23 @@ test("facilitator tools: status and next step in the same save, vet email, close
   const o = await (await get("complaint", `/api/complaint?id=${IDS.cMine}`, EMAILS.owner)).json();
   assert.equal(o.resolution, "The clinic apologised and refunded the exam fee.");
   assert.equal(o.activity[0].text, "Your request was completed");
+});
+
+test("staff tools: old Knack status names read as the new ones, duplicates are flagged, close without resolution is staff only and never emails the owner", async () => {
+  // fixture #297 is stored as the old "Mediator Assigned"
+  const list = (await (await get("complaints", "/api/complaints", EMAILS.staff)).json()).work;
+  assert.equal(list.find((c) => c.n === 297).status, "Facilitator assigned");
+  assert.equal(list.find((c) => c.n === 322).duplicate_of, 321, "same owner, same vet ('Ellen Marsh DVM' vs 'Dr. Ellen Marsh'), same day");
+  assert.equal(list.find((c) => c.n === 321).duplicate_of, undefined);
+  // facilitators can't close without resolution; staff must give a reason
+  assert.equal((await post("complaint", "/api/complaint/close_unresolved", { id: IDS.cOther, reason: "x" }, EMAILS.fac2)).status, 403);
+  assert.equal((await post("complaint", "/api/complaint/close_unresolved", { id: IDS.cDup, reason: " " }, EMAILS.staff)).status, 400);
+  assert.equal((await post("complaint", "/api/complaint/status", { id: IDS.cDup, status: "Closed without resolution" }, EMAILS.staff)).status, 400, "only through its own action");
+  const n = SENT.length;
+  assert.equal((await post("complaint", "/api/complaint/close_unresolved", { id: IDS.cDup, reason: "Duplicate of #321" }, EMAILS.staff)).status, 200);
+  assert.deepEqual(complaintRow(IDS.cDup).fields[F.C.status], { name: "Closed without resolution" });
+  assert.ok(!SENT.slice(n).some((m) => m.to.some((t) => t.email === EMAILS.owner2)), "the owner is not emailed");
+  const o = await (await get("complaint", `/api/complaint?id=${IDS.cDup}`, EMAILS.owner2)).json();
+  assert.equal(o.owner_status, "Closed without resolution");
+  assert.ok(!JSON.stringify(o).includes("Duplicate of #321"), "the reason is a staff note");
 });

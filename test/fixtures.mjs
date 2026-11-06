@@ -6,7 +6,7 @@ const r = (id, fields) => ({ id, createdTime: "2026-10-01T12:00:00.000Z", fields
 export const IDS = {
   staff: "recPPL00000000001", fac: "recPPL00000000002", fac2: "recPPL00000000003", owner: "recPPL00000000004", owner2: "recPPL00000000005",
   inactiveFac: "recPPL00000000006", stranger: "recPPL00000000007",
-  cNew: "recCMP00000000001", cMine: "recCMP00000000002", cDone: "recCMP00000000003", cOther: "recCMP00000000004",
+  cNew: "recCMP00000000001", cMine: "recCMP00000000002", cDone: "recCMP00000000003", cOther: "recCMP00000000004", cDup: "recCMP00000000005",
   u1: "recUPD00000000001", u2: "recUPD00000000002"
 };
 export const EMAILS = { staff: "sam@example.org", fac: "priya@example.org", fac2: "marcus@example.org", owner: "jordan@example.org", owner2: "dana@example.org", inactive: "old@example.org", stranger: "nobody@example.org" };
@@ -33,6 +33,7 @@ export const RECORDS = {
     r(IDS.cNew, { [C.n]: 321, [C.received]: "2026-10-28T14:00:00.000Z", [C.status]: { name: "Awaiting assignment" }, [C.owner]: [IDS.owner2], [C.subject]: "Post-surgery infection not explained", [C.desc]: "Swelling a week after a dental extraction.", [C.vet]: "Dr. Ellen Marsh", [C.practice]: "Brookside Animal Hospital", [C.uploads]: [att("attUP0000000000001", "discharge-notes.pdf")] }),
     r(IDS.cMine, { [C.n]: 318, [C.received]: "2026-10-12T14:00:00.000Z", [C.status]: { name: "Mediator waiting for veterinarian to respond" }, [C.owner]: [IDS.owner], [C.fac]: [IDS.fac], [C.subject]: "Euthanasia handled without explanation", [C.desc]: "We felt rushed and were never told what the tests showed.", [C.vet]: "Dr. Thomas Greer", [C.practice]: "Riverbend Veterinary Clinic", [C.release]: [att("attRL0000000000001", "release.pdf")] }),
     r(IDS.cDone, { [C.n]: 309, [C.received]: "2025-08-30T14:00:00.000Z", [C.status]: { name: "Completed" }, [C.owner]: [IDS.owner], [C.fac]: [IDS.fac], [C.subject]: "Vaccine reaction follow-up", [C.desc]: "I was not told what to watch for.", [C.vet]: "Dr. Nina Patel", [C.resolution]: "The clinic updated its after-vaccine handout." }),
+    r(IDS.cDup, { [C.n]: 322, [C.received]: "2026-10-28T14:06:00.000Z", [C.status]: { name: "Awaiting assignment" }, [C.owner]: [IDS.owner2], [C.subject]: "Post-surgery infection not explained", [C.desc]: "Same as before.", [C.vet]: "Ellen Marsh DVM", [C.practice]: "Brookside Animal Hospital" }),
     r(IDS.cOther, { [C.n]: 297, [C.received]: "2025-02-03T14:00:00.000Z", [C.status]: { name: "Mediator Assigned" }, [C.owner]: [IDS.owner2], [C.fac]: [IDS.fac2], [C.subject]: "Communication after surgery", [C.desc]: "No one returned my calls.", [C.vet]: "Dr. Omar Haddad" })
   ],
   tblzyvyYFymTo4xR6: [

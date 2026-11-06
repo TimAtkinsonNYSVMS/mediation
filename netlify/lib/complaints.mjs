@@ -1,4 +1,5 @@
-// Mediation portal domain v03 (2026-11-06). v03: next_step in staff/facilitator lists and detail.
+// Mediation portal domain v04 (2026-11-06). v04: new status names; possible duplicates (same owner, same vet, within 14 days).
+// v03 (2026-11-06). v03: next_step in staff/facilitator lists and detail.
 // v02 (2026-11-06). v02: owner-facing status names, "what's happening" text and the owner Activity list
 // (built here from fixed sentences, never from notes). v01 (2026-11-04). Shapes complaints for each kind of viewer, numbers new complaints,
 // and builds the notification emails that replaced the 5 Knack email rules (docs/phase2-portal-spec.md).
@@ -6,6 +7,7 @@ import { env } from "./core.mjs";
 import { readTable, readByIds } from "./airtable.mjs";
 import { viewOf, can, activeStaff, statusAllowed, STATUSES } from "./access.mjs";
 import { notify } from "./mail.mjs";
+import { CLOSED } from "./statuses.mjs";
 
 export const portalUrl = () => env("PORTAL_URL", "https://mediation.nysvms.org");
 const first = (a) => (Array.isArray(a) ? a[0] : a) || null;
@@ -13,9 +15,9 @@ const files = (list) => (list || []).map((f) => ({ id: f.id, filename: f.filenam
 
 // Owner-facing wording for the stored statuses (the stored values are renamed later, with the staff redesign).
 export const OWNER_STATUS = {
-  "Awaiting assignment": "Awaiting assignment", "Asking mediator to accept": "Awaiting assignment", "Mediator Assigned": "Facilitator assigned",
-  "Mediator waiting for owner to respond": "Waiting for your reply", "Mediator waiting for veterinarian to respond": "Waiting on the veterinarian",
-  "Mediation in progress": "Mediation in progress", "Completed": "Completed", "Withdrawn": "Withdrawn"
+  "Awaiting assignment": "Awaiting assignment", "Facilitator assigned": "Facilitator assigned", "Mediation in progress": "Mediation in progress",
+  "Waiting on the veterinarian": "Waiting on the veterinarian", "Waiting on the owner": "Waiting for your reply", "Completed": "Completed",
+  "Closed without resolution": "Closed without resolution"
 };
 export const ownerStatus = (s) => OWNER_STATUS[s || "Awaiting assignment"] || s;
 const firstName = (n) => String(n || "").replace(/^Dr\.?\s+/i, "Dr. ");
@@ -46,8 +48,24 @@ export async function peopleById() {
   return new Map((await readTable("people")).map((p) => [p.id, p]));
 }
 
+// Possible duplicates: the same owner about the same vet (name compared loosely) filed within 14 days of an earlier request.
+// Returns Map(id -> number of the earlier request).
+const vetKey = (v) => String(v || "").toLowerCase().replace(/\b(dr|dvm|vmd)\b\.?/g, "").replace(/[^a-z]/g, "");
+export function duplicates(all) {
+  const out = new Map();
+  const sorted = [...all].sort((a, b) => String(a.received).localeCompare(String(b.received)) || (a.n || 0) - (b.n || 0));
+  sorted.forEach((c, i) => {
+    const owner = first(c.owner), key = vetKey(c.vet_name);
+    if (!owner || !key) return;
+    const earlier = sorted.slice(0, i).find((p) => first(p.owner) === owner && vetKey(p.vet_name) === key && !out.has(p.id)
+      && Math.abs(new Date(c.received) - new Date(p.received)) <= 14 * 864e5);
+    if (earlier) out.set(c.id, earlier);
+  });
+  return out;
+}
+
 // One row of a list.
-export function listItem(c, people, view) {
+export function listItem(c, people, view, dups) {
   const fac = people.get(first(c.facilitator));
   const item = {
     id: c.id, n: c.n, received: c.received, status: c.status || "Awaiting assignment", subject: c.subject || "",
@@ -60,6 +78,7 @@ export function listItem(c, people, view) {
     item.owner = owner ? owner.name : "";
     item.region = fac?.region || "";
     item.next_step = c.next_step || "";
+    if (dups?.has(c.id)) item.duplicate_of = dups.get(c.id).n;
   }
   return item;
 }
@@ -87,15 +106,16 @@ export async function detail(me, c) {
     const a = people.get(first(u.author));
     return { id: u.id, n: u.n, date: u.date, author: a ? a.name : "", notes: u.notes || "", letter_type: u.letter_type || "", letter_text: u.letter_text || "", documents: files(u.documents), type: u.type || "", with: u.with || "", status_set: u.status_set || "" };
   }).sort((a, b) => String(b.date).localeCompare(String(a.date)) || (b.n || 0) - (a.n || 0));
+  const dup = duplicates(await readTable("complaints")).get(c.id);
   return {
-    ...base,
+    ...base, duplicate_of: dup ? { id: dup.id, n: dup.n } : null,
     owner: owner ? { name: owner.name || "", email: owner.email || "", phone: owner.phone || "", address: owner.address || "" } : null,
     facilitator: fac ? { id: fac.id, name: fac.name || "", email: fac.email || "", region: fac.region || "" } : null,
     vet_email: c.vet_email || "", practice_address: c.practice_address || "", next_step: c.next_step || "",
     attestations: { member: !!c.a_member, legal: !!c.a_legal, opd: !!c.a_opd, fees: !!c.a_fees, service: !!c.a_service, terms: !!c.a_terms },
     resolution: c.resolution || "", resolution_notes: c.resolution_notes || "",
     feedback: c.fb_date ? { date: c.fb_date, overall: c.fb_overall, value: c.fb_value, facilitator: c.fb_facilitator, admin: c.fb_admin, comments: c.fb_comments || "" } : null,
-    updates, can_assign: can(me, "assign", c), can_work: can(me, "work", c),
+    updates, can_assign: can(me, "assign", c), can_work: can(me, "work", c), closed: CLOSED.includes(base.status),
     statuses: STATUSES.filter((s) => statusAllowed(me, s) || s === c.status)
   };
 }

@@ -12,7 +12,7 @@ import { normEmail } from "../lib/otp.mjs";
 
 const REGIONS = ["Capital District", "Catskill", "Central NY", "Finger Lakes", "Genesee Valley", "Hudson Valley", "Long Island", "NYC",
   "Northern NY", "Southern Tier", "Western NY", "Westchester/Rockland"];
-const CLOSED = ["Completed", "Withdrawn"];
+import { CLOSED } from "../lib/statuses.mjs";
 const text = (v, max) => String(v ?? "").trim().slice(0, max);
 
 async function log(action, by, person, summary, details = "") {

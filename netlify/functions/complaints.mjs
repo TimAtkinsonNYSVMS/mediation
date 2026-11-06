@@ -1,9 +1,9 @@
-// GET /api/complaints · v01 (2026-11-04). The complaints this person may see, newest first.
+// GET /api/complaints · v02 (2026-11-06). v02: staff/facilitator rows carry duplicate_of. v01 (2026-11-04). The complaints this person may see, newest first.
 // Staff: all. Facilitators: those assigned to them. Owners: their own. One person can be more than one.
 import { json } from "../lib/core.mjs";
 import { readTable } from "../lib/airtable.mjs";
 import { requirePerson, viewOf } from "../lib/access.mjs";
-import { listItem, peopleById } from "../lib/complaints.mjs";
+import { listItem, peopleById, duplicates } from "../lib/complaints.mjs";
 
 export default async (req) => {
   try {
@@ -11,11 +11,13 @@ export default async (req) => {
     if (me instanceof Response) return me;
     const people = await peopleById();
     const mine = [], assigned = [];
-    for (const c of await readTable("complaints")) {
+    const all = await readTable("complaints");
+    const dups = duplicates(all);
+    for (const c of all) {
       const view = viewOf(me, c);
       if (!view) continue;
       if ((c.owner || []).includes(me.id)) mine.push(listItem(c, people, "owner"));
-      if (view === "full") assigned.push({ ...listItem(c, people, "full"), assigned_to_me: (c.facilitator || []).includes(me.id) });
+      if (view === "full") assigned.push({ ...listItem(c, people, "full", dups), assigned_to_me: (c.facilitator || []).includes(me.id) });
     }
     const byN = (a, b) => (b.n || 0) - (a.n || 0);
     return json({ mine: mine.sort(byN), work: assigned.sort(byN) });

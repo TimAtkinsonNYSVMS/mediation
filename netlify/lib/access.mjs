@@ -1,4 +1,5 @@
-// Mediation portal access v02 (2026-11-04). Who is signed in and what they may see and do.
+// Mediation portal access v03 (2026-11-06). v03: new status names (statuses.mjs); only staff close without resolution.
+// v02 (2026-11-04). Who is signed in and what they may see and do.
 // v02: View as. requirePerson() returns the *effective* person (the one being viewed, if any), with .real and
 // .viewing set; write endpoints call refuseIfViewing(). Staff-only tools check the real person with requireStaff().
 // The single place these rules live (docs/phase2-portal-spec.md, docs/admin-and-view-as-spec.md).
@@ -69,9 +70,10 @@ export function can(me, action, c) {
 }
 
 // Statuses a facilitator may set (staff may set any).
-export const STATUSES = ["Awaiting assignment", "Asking mediator to accept", "Mediator Assigned", "Mediator waiting for owner to respond",
-  "Mediator waiting for veterinarian to respond", "Mediation in progress", "Completed", "Withdrawn"];
-export const statusAllowed = (me, s) => STATUSES.includes(s) && (me.staff || !["Awaiting assignment", "Asking mediator to accept"].includes(s));
+import { STATUSES } from "./statuses.mjs";
+export { STATUSES };
+// Statuses set from the status menu. Completed and Closed without resolution have their own actions (close, close_unresolved).
+export const statusAllowed = (me, s) => STATUSES.includes(s) && !["Completed", "Closed without resolution"].includes(s) && (me.staff || s !== "Awaiting assignment");
 
 // The real signed-in person, and the person being viewed (if a valid View as cookie is present).
 // The cookie counts only if it was started by this same person and they are still active Staff.

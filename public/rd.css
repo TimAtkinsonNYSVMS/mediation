@@ -263,3 +263,21 @@ main.rd-soft { background: var(--soft, #f6f8f9); }
   .rd .band.hero { padding: 32px 0 40px; }
   .rd .know { padding: 20px; }
 }
+
+/* staff pages (v05) */
+.rd .a-bad { background: #fde8e8; color: #7f1d1d; }
+.rd .bad-text { color: #b42318; }
+.rd .tag.warn { background: #fff4d6; border-color: #e8c66a; color: #5c3e00; display: inline-flex; align-items: center; gap: 4px; }
+.rd .tag.bad { background: #fde8e8; border-color: #f0b4b4; color: #8a1c1c; display: inline-flex; align-items: center; gap: 4px; }
+.rd .tag .ico { width: 13px; height: 13px; }
+.rd .tbl tr.hl-bad td { background: #fff7f7; }
+.rd .search { flex: 1 1 280px; max-width: 420px; margin-left: auto; }
+.rd .search .input { min-height: 44px; }
+.rd .load { width: 64px; height: 6px; background: var(--rule); border-radius: 3px; overflow: hidden; }
+.rd .load span { display: block; height: 100%; background: var(--action); }
+.rd .tplbtn { width: 100%; text-align: left; font: inherit; }
+.rd .tplbtn.on { border-color: var(--action); background: #f2f8fc; }
+.rd .choice .avatar { margin-top: 0; }
+@media (max-width: 760px) { .rd .search { max-width: none; margin-left: 0; } }
+.rd .linkbtn.sm { font-size: 14px; }
+@media (max-width: 760px) { .rd .tbl.stackable tr { width: auto; } .rd .tbl.stackable { width: 100%; table-layout: fixed; } }

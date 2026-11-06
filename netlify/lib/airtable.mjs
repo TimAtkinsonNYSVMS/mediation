@@ -1,9 +1,11 @@
-// Mediation portal Airtable access v03 (2026-11-06). v03: Mediation Requests "Next step"; Progress Updates Type/With/Status Set.
+// Mediation portal Airtable access v04 (2026-11-06). v04: statuses read through normStatus (old Knack names map to the new ones).
+// v03 (2026-11-06). v03: Mediation Requests "Next step"; Progress Updates Type/With/Status Set.
 // Was v02 (2026-11-04). v02: Admin Log table; People "active" etc. used by the Admin page.
 // Was v01 (2026-11-04). Field IDs, never names (see docs/airtable.md).
 // Base "Complaints Mediation". People and Letter Templates are cached for 60 seconds per function instance;
 // Complaints and Progress Updates are always read fresh.
 import { env } from "./core.mjs";
+import { normStatus } from "./statuses.mjs";
 
 export const BASE = "appUbdZxOQ7WjyOYJ";
 export const TABLES = {
@@ -65,6 +67,8 @@ const flat = (v) => {
 const row = (t, r) => {
   const o = { id: r.id, created: r.createdTime || "" };
   for (const [fid, name] of Object.entries(t.fields)) o[name] = flat(r.fields[fid]);
+  if (t === TABLES.complaints) o.status = normStatus(o.status);
+  if (t === TABLES.updates && o.type === "Status change") o.status_set = normStatus(o.status_set);
   return o;
 };
 
