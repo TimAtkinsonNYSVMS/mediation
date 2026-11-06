@@ -217,6 +217,8 @@ function about() {
         el("a", { class: "btn lg go", href: "#/file" }, "Start a request", ico("right")))));
 }
 
+// Sign in: email, then a 6-box code (paste fills all six).
+let signinEmail = "";
 function signIn() {
   if (me) { location.hash = "#/"; return; }
   const msg = el("div");
