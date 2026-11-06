@@ -1,4 +1,4 @@
-// Mediation portal app v06 (2026-11-06). v06: About NYSVMS section on the home page.
+// Mediation portal app v07 (2026-11-06). v07: home page restyled to Tim's mockup (full-width bands). v06: About NYSVMS section on the home page.
 // v05 (2026-11-06). v05: facilitator pages redesigned (10-14, 27): My assignments with next step, request workspace,
 // log an update (type, with, next step, optional status), Close request, add the vet's email, Draft a letter with Open in my email and Log as sent.
 // v04 (2026-11-06). v04: pet owner pages redesigned (06-09, 28) with the Activity list; updates record a Type and With.
@@ -117,7 +117,7 @@ window.addEventListener("hashchange", route);
 // ---- redesign helpers (design/redesign, scoped by rd.css) ----
 // showRd renders a redesigned page: #main gets the .rd scope; soft = grey page ground (sign-in).
 function showRd(opts, ...kids) {
-  main.className = "rd rd-wrap" + (opts.narrow ? " rd-narrow" : "");
+  main.className = opts.bleed ? "rd rd-bleed" : "rd rd-wrap" + (opts.narrow ? " rd-narrow" : "");
   main.parentElement.classList.toggle("rd-soft", !!opts.soft);
   main.replaceChildren();
   for (const k of kids.flat(Infinity)) if (k) main.append(k);
@@ -134,6 +134,8 @@ const ICO = {
   mail: ["M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z", "m22 7-10 6L2 7"],
   pen: ["M12 20h9", "M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4z"], plus: ["M12 5v14", "M5 12h14"],
   copy: ["M11 9h9a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2v-9a2 2 0 0 1 2-2z", "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"],
+  x: ["M18 6 6 18", "m6 6 12 12"], ban: ["M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z", "m4.9 4.9 14.2 14.2"],
+  user: ["M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2", "M12 3a4 4 0 1 0 0 8 4 4 0 0 0 0-8z"],
   file: ["M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z", "M14 2v6h6"]
 };
 function ico(name) {
@@ -155,52 +157,66 @@ const TERMS_TEXT = ["We offer a free service, and in return we ask you to confir
 
 // ---- public pages ----
 function about() {
-  const fit = (pill, kind, title, text, link) => el("div", { class: "card stack g12" + (kind === "p-ok" ? " fit" : "") },
-    el("span", { class: "pill " + kind, text: pill }), el("h3", { class: "t3", text: title }), el("p", { class: "sm muted", text }), link);
-  showRd({},
-    el("div", { class: "cols", style: "gap:48px;align-items:center;margin-bottom:56px" },
-      el("div", { class: "colmain", style: "gap:20px" },
-        el("p", { class: "eyebrow", text: "Mediation for pet owners" }),
-        el("h1", { class: "t1 hero", text: "Help understanding the care your animal received" }),
-        el("p", { style: "max-width:680px", text: "NYSVMS volunteer veterinarians help pet owners understand the treatment provided by a veterinarian who is a member of the Society, and help communicate your concerns to them." }),
-        el("div", { class: "row g12", style: "margin-top:8px" },
-          el("a", { class: "btn lg", href: "#/file" }, "Start a request", ico("right")),
-          el("a", { class: "btn2 lg", href: "#/signin", text: "Check on a request" })),
-        el("div", { class: "row g24 sm muted", style: "margin-top:4px" },
-          el("span", { class: "row g8" }, ico("clock"), "About 10 minutes to fill in"),
-          el("span", { class: "row g8" }, ico("check"), "A volunteer is usually assigned within two weeks"))),
-      el("aside", { class: "colside navy stack g12", style: "flex:1 1 340px" },
-        el("h2", { class: "t3", style: "font-size:20px", text: "Please know before you start" }),
-        el("p", { text: "We have no connection to the State licensing board and cannot impose penalties or remove licenses." }),
-        el("p", { text: "We can only help when the veterinarian is a member of NYSVMS." }))),
-    el("section", { class: "card soft row g32", style: "margin-bottom:56px;align-items:flex-start", "aria-labelledby": "nysvms" },
-      el("div", { class: "stack g12", style: "flex:2 1 420px;min-width:0" },
-        el("p", { class: "eyebrow", text: "About NYSVMS" }),
-        el("h2", { id: "nysvms", class: "t2", text: "Who we are" }),
-        el("p", { text: "The New York State Veterinary Medical Society (NYSVMS) is a nonprofit professional association for veterinarians across New York State. It was founded by veterinarians, is led by veterinarians, and has served New York veterinarians since 1890 through 12 regional chapters." }),
-        el("p", { text: "Mediation is a free service the Society offers to the public. Volunteer veterinarians who are NYSVMS members help pet owners understand the care their animal received and share their concerns with the treating veterinarian." })),
-      el("div", { class: "stack g12", style: "flex:1 1 280px;min-width:0" },
-        el("p", { class: "lede", text: "“Leading the veterinary profession in New York State through education, advancement and protection of animal wellness, public health and veterinary medicine.”" }),
-        el("span", { class: "sm muted", text: "The NYSVMS mission" }),
-        extLink({ label: "Learn more at nysvms.org", href: "https://nysvms.org/about-us-2/" }))),
-    el("section", { style: "margin-bottom:56px", "aria-labelledby": "how" },
-      el("h2", { id: "how", class: "t2", style: "margin-bottom:24px", text: "How it works" }),
+  const band = (cls, label, ...kids) => el("section", { class: "band " + cls, "aria-labelledby": label || null }, el("div", { class: "band-in" }, kids));
+  const head = (eyebrow, id, title, sub) => el("div", { class: "stack g8", style: "margin-bottom:28px" }, el("p", { class: "eyebrow", text: eyebrow }),
+    el("h2", { id, class: "t1 band-h", text: title }), sub ? el("p", { class: "muted", text: sub }) : null);
+  const step = (n, t, d) => el("li", { class: "card stack g12 step s" + n }, el("span", { class: "stepn", "aria-hidden": "true", text: String(n) }), el("h3", { class: "t3", text: t }), el("p", { class: "sm muted", text: d }));
+  const no = (title, text, help) => el("div", { class: "fitcard no" },
+    el("div", { class: "fit-top" }, ico("ban"), "Not something we review"),
+    el("div", { class: "stack g12 fit-body" }, el("h3", { class: "t3", text: title }), el("p", { class: "sm", text }),
+      el("a", { class: "btn red", href: help.href, target: "_blank", rel: "noopener" }, help.label, ico("ext"))));
+  showRd({ bleed: true },
+    band("hero", "hero-h",
+      el("div", { class: "cols", style: "gap:48px;align-items:center" },
+        el("div", { class: "colmain", style: "gap:20px" },
+          el("p", { class: "eyebrow", text: "Mediation for pet owners" }),
+          el("h1", { id: "hero-h", class: "t1 hero", text: "Help understanding the care your animal received" }),
+          el("p", { style: "max-width:640px", text: "NYSVMS volunteer veterinarians help pet owners understand the treatment provided by a veterinarian who is a member of the Society, and help communicate your concerns to them." }),
+          el("div", { class: "row g12", style: "margin-top:8px" },
+            el("a", { class: "btn lg go", href: "#/file" }, "Start a request", ico("right")),
+            el("a", { class: "btn2 lg ghost", href: "#/signin", text: "Check on a request" })),
+          el("div", { class: "row g8", style: "margin-top:4px" },
+            el("span", { class: "chiplet" }, ico("clock"), "About 10 minutes to fill in"),
+            el("span", { class: "chiplet" }, ico("user"), "A volunteer is usually assigned within two weeks"))),
+        el("aside", { class: "colside know", "aria-labelledby": "know-h" },
+          el("h2", { id: "know-h", class: "row g12 nowrap" }, el("span", { class: "know-ico" }, ico("alert")), "Please know before you start"),
+          el("ul", { class: "stack g12" },
+            el("li", {}, ico("x"), el("span", { text: "We have no connection to the State licensing board and cannot impose penalties or remove licenses." })),
+            el("li", {}, ico("info"), el("span", { text: "We can only help when the veterinarian is a member of NYSVMS." })))))),
+    band("soft", "how",
+      head("Three steps", "how", "How it works"),
       el("ol", { class: "grid3" },
-        [["Tell us what happened", "Answer a few questions about the visit and your veterinarian. You can attach records and photos."],
-         ["A volunteer is assigned", "A volunteer veterinarian, your facilitator, is usually assigned within two weeks and contacts you directly by email or phone."],
-         ["They talk with your vet", "Your facilitator helps you understand the care and shares your concerns with the veterinarian. You can sign in any time to see where things stand."]]
-          .map(([t, d], i) => el("li", { class: "card stack g12" }, el("span", { class: "kpi", "aria-hidden": "true", text: String(i + 1) }), el("h3", { class: "t3", text: t }), el("p", { class: "sm muted", text: d }))))),
-    el("section", { "aria-labelledby": "fit" },
-      el("h2", { id: "fit", class: "t2", style: "margin-bottom:8px", text: "Is mediation right for you?" }),
-      el("p", { class: "muted", style: "margin-bottom:24px", text: "If your concern is about fees or discipline, another organization can help you faster." }),
+        step(1, "Tell us what happened", "Answer a few questions about the visit and your veterinarian. You can attach records and photos."),
+        step(2, "A volunteer is assigned", "A volunteer veterinarian, your facilitator, is usually assigned within two weeks and contacts you directly by email or phone."),
+        step(3, "They talk with your vet", "Your facilitator helps you understand the care and shares your concerns with the veterinarian. You can sign in any time to see where things stand."))),
+    band("plain", "fit",
+      head("Check first", "fit", "Is mediation right for you?", "If your concern is about fees or discipline, another organization can help you faster."),
       el("div", { class: "grid3" },
-        fit("We can help", "p-ok", "Questions about care", "Questions about the diagnosis, treatment or communication you received from an NYSVMS member veterinarian.", el("a", { class: "sm strong", href: "#/file", text: "Start a request" })),
-        fit("Not something we review", "p-mute", "Fees and billing", "We can't review what a practice charges. For a dispute about fees, contact a consumer protection organization.", extLink(HELP.fees)),
-        fit("Not something we review", "p-mute", "Discipline or license action", "For fines or license action, contact the NY State Office of the Professions, Office of Professional Discipline.", extLink(HELP.opd)))));
+        el("div", { class: "fitcard yes" },
+          el("div", { class: "fit-top" }, el("span", { class: "yes-ico" }, ico("check")), "We can help"),
+          el("div", { class: "stack g12 fit-body" }, el("h3", { class: "t3", text: "Questions about care" }),
+            el("p", { class: "sm", text: "Questions about the diagnosis, treatment or communication you received from an NYSVMS member veterinarian." }),
+            el("a", { class: "btn white", href: "#/file" }, "Start a request", ico("right")))),
+        no("Fees and billing", "We can't review what a practice charges. For a dispute about fees, contact a consumer protection organization.", HELP.fees),
+        no("Discipline or license action", "For fines or license action, contact the NY State Office of the Professions, Office of Professional Discipline.", HELP.opd))),
+    band("soft", "nysvms",
+      el("div", { class: "row g32", style: "align-items:flex-start" },
+        el("div", { class: "stack g12", style: "flex:2 1 420px;min-width:0" },
+          el("p", { class: "eyebrow", text: "About NYSVMS" }),
+          el("h2", { id: "nysvms", class: "t1 band-h", text: "Who we are" }),
+          el("p", { text: "The New York State Veterinary Medical Society (NYSVMS) is a nonprofit professional association for veterinarians across New York State. It was founded by veterinarians, is led by veterinarians, and has served New York veterinarians since 1890 through 12 regional chapters." }),
+          el("p", { text: "Mediation is a free service the Society offers to the public. Volunteer veterinarians who are NYSVMS members help pet owners understand the care their animal received and share their concerns with the treating veterinarian." })),
+        el("div", { class: "stack g12", style: "flex:1 1 280px;min-width:0" },
+          el("p", { class: "lede", text: "“Leading the veterinary profession in New York State through education, advancement and protection of animal wellness, public health and veterinary medicine.”" }),
+          el("span", { class: "sm muted", text: "The NYSVMS mission" }),
+          extLink({ label: "Learn more at nysvms.org", href: "https://nysvms.org/about-us-2/" })))),
+    band("cta", "cta-h",
+      el("div", { class: "row g24 between" },
+        el("div", { class: "stack g8" }, el("h2", { id: "cta-h", class: "t2", text: "Ready to tell us what happened?" }),
+          el("p", { text: "It takes about 10 minutes. You can attach records and photos." })),
+        el("a", { class: "btn lg go", href: "#/file" }, "Start a request", ico("right")))));
 }
 
-// Sign in: email, then a 6-box code (paste fills all six).
-let signinEmail = "";
 function signIn() {
   if (me) { location.hash = "#/"; return; }
   const msg = el("div");

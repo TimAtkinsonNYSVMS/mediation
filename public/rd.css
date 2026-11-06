@@ -207,3 +207,59 @@ main.rd-soft { background: var(--soft, #f6f8f9); }
   .rd .tbl.stackable td:not(:first-child)::before { content: attr(data-label); display: block; font-family: "Roboto", sans-serif; font-weight: 700; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); margin-bottom: 2px; }
 }
 .rd [hidden] { display: none !important; }
+
+/* home page bands (v04, Tim's mockup 2026-11-06) */
+.rd-bleed { width: 100%; }
+.rd .band { padding: 64px 0; }
+.rd .band-in { width: 91%; max-width: 1200px; margin: 0 auto; }
+.rd .band.soft { background: var(--soft); }
+.rd .band.plain { background: #fff; }
+.rd .band-h { font-size: 34px; }
+.rd .band.hero { background: var(--navy); color: #fff; padding: 56px 0 64px; }
+.rd .band.hero h1 { color: #fff; }
+.rd .band.hero .eyebrow { color: #ffc93c; }
+.rd .band.hero p { color: #e6eef5; }
+.rd .btn.go { background: #1f7a3a; }
+.rd .btn.go:hover { background: #17602d; }
+.rd .btn2.ghost { background: transparent; color: #fff; box-shadow: inset 0 0 0 2px #fff; }
+.rd .btn2.ghost:hover { background: rgba(255,255,255,.1); color: #fff; }
+.rd .chiplet { display: inline-flex; align-items: center; gap: 6px; padding: 4px 12px; border-radius: 999px; background: rgba(255,255,255,.12); color: #fff; font-size: 14px; }
+.rd .chiplet .ico { width: 16px; height: 16px; }
+.rd .know { background: #ffc93c; color: #2b2100; padding: 28px; flex: 1 1 340px; }
+.rd .know h2 { font: 500 20px/1.3 "Roboto", sans-serif; color: #2b2100; margin-bottom: 16px; }
+.rd .know-ico { width: 36px; height: 36px; background: #2b2100; color: #ffc93c; display: inline-flex; align-items: center; justify-content: center; flex: none; }
+.rd .know ul { list-style: none; margin: 0; padding: 0; }
+.rd .know li { display: flex; gap: 10px; font-size: 15px; line-height: 1.5; }
+.rd .know li .ico { margin-top: 3px; }
+.rd .step { border-top: 4px solid var(--action); }
+.rd .step.s2 { border-top-color: var(--navy); }
+.rd .step.s3 { border-top-color: #1f7a3a; }
+.rd .stepn { font: 500 44px/1 "Roboto", sans-serif; color: var(--action); }
+.rd .s2 .stepn { color: var(--navy); }
+.rd .s3 .stepn { color: #1f7a3a; }
+.rd .fitcard { border-radius: 6px; overflow: hidden; display: flex; flex-direction: column; background: #fff; }
+.rd .fit-top { display: flex; align-items: center; gap: 10px; padding: 14px 20px; font: 700 12px/1.2 "Roboto", sans-serif; letter-spacing: .12em; text-transform: uppercase; }
+.rd .fit-body { padding: 8px 24px 24px; flex: 1; }
+.rd .fit-body .btn { margin-top: auto; align-self: flex-start; white-space: normal; text-align: left; }
+.rd .fitcard.yes { background: #1f7a3a; color: #fff; }
+.rd .fitcard.yes h3 { color: #fff; font-size: 22px; }
+.rd .fitcard.yes p { color: #e8f3ec; }
+.rd .yes-ico { width: 32px; height: 32px; border-radius: 50%; background: #fff; color: #1f7a3a; display: inline-flex; align-items: center; justify-content: center; }
+.rd .yes-ico .ico { stroke-width: 3; }
+.rd .btn.white { background: #fff; color: #1f7a3a; }
+.rd .btn.white:hover { background: #e8f3ec; color: #17602d; }
+.rd .fitcard.no { border: 2px solid #c62828; }
+.rd .fitcard.no .fit-top { background: #c62828; color: #fff; margin-bottom: 12px; }
+.rd .fitcard.no h3 { color: #333; font-size: 20px; }
+.rd .btn.red { background: #c62828; color: #fff; }
+.rd .btn.red:hover { background: #9e1f1f; color: #fff; }
+.rd .band.cta { background: var(--navy); color: #fff; padding: 48px 0; }
+.rd .band.cta h2 { color: #fff; font-size: 30px; }
+.rd .band.cta p { color: #d6dfea; }
+@media (max-width: 760px) {
+  .rd .band { padding: 40px 0; }
+  .rd .band-in { width: auto; padding: 0 16px; }
+  .rd .band-h { font-size: 28px; }
+  .rd .band.hero { padding: 32px 0 40px; }
+  .rd .know { padding: 20px; }
+}
