@@ -1,4 +1,4 @@
-/* Mediation portal styles v02 (2026-11-04). v02: View as bar. Same tokens as the volunteer and treasurer portals (nysvms-design-standards). */
+/* Mediation portal styles v03 (2026-11-06). v03: header, tabs and footer match design/redesign/portal.css. v02: View as bar. Same tokens as the volunteer and treasurer portals (nysvms-design-standards). */
 :root {
   --blue-1: #5778a2; --blue-2: #0f7bb3; --blue-deep: #0a5a85; --blue-soft: #d6dfea; --blue-wash: #e8f1f8;
   --ink: #333333; --ink-2: #555555; --bg: #ffffff; --bg-2: #f6f8f9; --rule: #e4e8ec; --line: #c9d2db;
@@ -129,3 +129,17 @@ legend { font: 700 14px var(--roboto); padding: 0 6px; }
 .viewbar { background: #f6d860; color: #3d2f00; border-bottom: 1px solid #c9a800; }
 .viewbar-in { padding-block: 10px; display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; font-size: 15px; }
 .viewbar .btn-small { background: #fff; }
+
+/* v03: shared chrome from the redesign (header 68px, logo 38px, Roboto 500 tabs, underlined Sign out, soft footer) */
+.in { max-width: 1200px; }
+.util-in { min-height: 68px; padding-block: 8px; }
+.logo { height: 38px; }
+.brand { gap: 16px; }
+.brand-label { padding-left: 16px; }
+.who .btn-on-dark { background: none; box-shadow: none; padding: 0 4px; text-decoration: underline; text-underline-offset: 3px; font-weight: 500; font-size: 15px; }
+.who .btn-on-dark:hover { background: none; color: #d6dfea; }
+nav.tabs a { font: 500 15px var(--roboto); color: var(--ink); min-height: 52px; display: inline-flex; align-items: center; padding: 0 12px; }
+nav.tabs a[aria-current="page"] { color: var(--blue-deep); }
+.foot-in { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 14px; color: var(--ink-2); padding-block: 28px; }
+main.rd-soft { background: #f6f8f9; }
+@media (max-width: 760px) { .util-in { min-height: 60px; } .logo { height: 30px; } .brand { gap: 10px; } .brand-label { padding-left: 10px; } }

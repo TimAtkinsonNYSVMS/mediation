@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Mediation portal page v02 (2026-11-04). v02: NYSVMS favicon (animal medallion from the logo, same files as the volunteer portal). -->
+<!-- Mediation portal page v03 (2026-11-06). v03: redesign header logo and rd.css. v02 (2026-11-04). v02: NYSVMS favicon (animal medallion from the logo, same files as the volunteer portal). -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -11,15 +11,16 @@
   <link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Roboto:wght@500;700&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Roboto:wght@400;500;700&display=swap">
   <link rel="stylesheet" href="/app.css">
+  <link rel="stylesheet" href="/rd.css">
   <script src="/app.js" defer></script>
 </head>
 <body>
   <header class="util">
     <div class="in util-in">
       <a class="brand" href="/#/">
-        <img class="logo" src="/assets/nysvms-logo-white.png" alt="NYSVMS">
+        <img class="logo" src="/assets/nysvms-logo-on-dark.png" alt="New York State Veterinary Medical Society">
         <span class="brand-label">Mediation</span>
       </a>
       <div class="who" id="who"></div>
@@ -27,7 +28,7 @@
   </header>
   <nav class="tabs" aria-label="Sections"><div class="in" id="tabs"></div></nav>
   <main><div class="in main-in" id="main" aria-live="polite"><p class="small">Loading…</p></div></main>
-  <footer class="foot"><div class="in foot-in"><p class="small">New York State Veterinary Medical Society · Questions? Email <a href="mailto:staff@nysvms.org">staff@nysvms.org</a></p></div></footer>
+  <footer class="foot"><div class="in foot-in"><span>New York State Veterinary Medical Society</span><span>Questions? Email <a href="mailto:staff@nysvms.org">staff@nysvms.org</a></span></div></footer>
   <div class="toast" id="toast" role="status" hidden></div>
 </body>
 </html>

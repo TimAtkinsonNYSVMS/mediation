@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Letter templates</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="portal.css">
+</head>
+<body>
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&amp;family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}a{color:#0f7bb3}a:hover{color:#0a5a85}</style>
+<div class="app">
+<header class="hdr"><div class="hdr-in"><a href="15-Staff-all-requests.html" aria-label="NYSVMS Mediation home"><img src="nysvms-logo-on-dark.png" alt="New York State Veterinary Medical Society"></a><span class="prod">Mediation</span><span class="sp"></span><div class="who"><span class="role">Staff</span><span>Sam Staff</span><a class="out" href="04-Sign-in-email.html">Sign out</a></div></div></header>
+<nav class="tabs" aria-label="Main"><div class="tabs-in"><a class="tab" href="15-Staff-all-requests.html">Requests</a><a class="tab" href="18-Staff-facilitators.html">Facilitators</a><a class="tab on" href="19-Staff-letter-templates.html" aria-current="page">Letter templates</a><a class="tab" href="20-Staff-admin.html">People and access</a></div></nav>
+<main class="wrap">
+<div class="row g16" style="justify-content: space-between; align-items: flex-end; margin-bottom: 28px;">
+<div class="stack g12"><p class="eyebrow">Staff</p><h1 class="t1">Letter templates</h1><p class="muted" style="max-width: 720px;">The letters facilitators can draft. Words in {braces} are filled in from the request.</p></div>
+<a class="btn2" href="#">Edit in Airtable <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg></a>
+</div>
+<div class="cols" style="gap: 24px;">
+<nav class="aside" style="flex: 1 1 280px; max-width: 340px; gap: 8px;" aria-label="Templates">
+<a class="choice on" href="#" style="flex-direction: column; gap: 6px; text-decoration: none !important; color: #333 !important;" aria-current="true"><span class="strong">Introduce yourself to Animal Owner</span><span class="tag" style="align-self: flex-start;">To owner</span></a>
+<a class="choice" href="#" style="flex-direction: column; gap: 6px; text-decoration: none !important; color: #333 !important;"><span class="strong">Introduce yourself to veterinarian</span><span class="tag" style="align-self: flex-start;">To veterinarian</span></a>
+</nav>
+<section class="main card" style="gap: 20px;" aria-labelledby="tp">
+<div class="card-h" style="margin: 0;"><h2 id="tp" class="t2">Introduce yourself to Animal Owner</h2><span class="tag">To owner</span></div>
+<dl class="dl" style="grid-template-columns: 90px 1fr;">
+<dt>Subject</dt><dd>Your complaint about Dr. <span class="ph">{vet_name}</span></dd>
+</dl>
+<hr class="divider">
+<div class="stack g12" style="font-size: 16px;">
+<p>Dear <span class="ph">{owner_name}</span>,</p>
+<p>I am <span class="ph">{facilitator_name}</span>.</p>
+<p><span class="ph">{feedback_link}</span></p>
+</div>
+<p class="sm muted" style="margin-top: 8px;">Changes made in Airtable show here within a minute.</p>
+</section>
+</div>
+</main>
+<footer class="ftr"><div class="ftr-in"><span>New York State Veterinary Medical Society</span><span>Questions? Email <a href="mailto:staff@nysvms.org">staff@nysvms.org</a></span></div></footer>
+</div>
+</body>
+</html>

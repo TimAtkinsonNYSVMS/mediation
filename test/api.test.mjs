@@ -135,6 +135,10 @@ test("intake: validates, numbers the complaint, reuses an existing person, email
   assert.deepEqual([c.fields[F.C.owner], c.fields[F.C.status]], [[IDS.owner], { name: "Awaiting assignment" }]);
   assert.deepEqual(SENT.slice(n).map((m) => m.to[0].email), [EMAILS.owner, "inbox@example.org"]);
   assert.ok(out.ticket);
+  // "I am not sure" about membership is accepted and saved unticked; "No" is refused
+  const unsure = await (await post("intake", "/api/intake", { ...good, a_member: false, member_unsure: true })).json();
+  assert.equal(complaintRow(unsure.complaint).fields.fldrQoWyAYJAIjIw5, false);
+  assert.equal((await post("intake", "/api/intake", { ...good, a_member: false })).status, 400);
   // the ticket uploads to this complaint's own fields only
   const file = { filename: "notes.pdf", contentType: "application/pdf", data: Buffer.from("pdf").toString("base64") };
   assert.equal((await post("upload", "/api/upload", { ...file, complaint: out.complaint, field: "uploads", ticket: out.ticket })).status, 200);

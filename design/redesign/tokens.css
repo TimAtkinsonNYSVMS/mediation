@@ -1,0 +1,227 @@
+/* NYSVMS Design System — generated from tokens.json */
+:root, [data-theme="default"] {
+  --blue-1: #5778a2; /* Blue 1, brand accent. Eyebrows, ledes, taglines, photo captions and secondary accents on white. Accent only: never body copy (4.5:1 on white, fine for large italic ledes and micro-labels). 4.2:1 on cream: below the floor for small text there. */
+  --blue-2: #0f7bb3; /* Blue 2, the action colour. Every CTA fill, every link, every active state and the nav underline. White text holds contrast on it. */
+  --blue-3: #2d7d9a; /* Blue 3. Reserved for italic emphasis inside headlines. */
+  --blue-2-deep: #0a5a85; /* Structural navy. Headlines, the utility bar, feature panels, dark CTA bands and any surface that carries white text; also the hover for blue-2. */
+  --blue-1-soft: #d6dfea; /* The only secondary text colour on navy (blue-2-deep). Also the hover fill of the on-dark button. */
+  --grey-1: #333333; /* Grey 1. Body copy on white, grey-2 and cream. */
+  --grey-2: #f6f8f9; /* Grey 2. Soft interface sections and every hover fill. An interface tint, not an editorial surface; never beside cream. */
+  --rule-color: #e4e8ec; /* Every 1px border, divider and hairline rule on white and grey-2. */
+  --white: #ffffff; /* Default page and card surface; text and logo colour on navy. */
+  --ember: #c0561f; /* v1.1 warm accent. Attribution credentials, publication and byline dates, editorial kickers on cream. Never an action colour. Contrast: 4.6:1 on white; 4.2:1 on cream, below 4.5:1 for small text (source value kept, flagged). */
+  --ember-deep: #9b4318; /* Hover for ember text. */
+  --cream: #faf6ec; /* v1.1 editorial surface for long-form features, President's messages and member stories. Never adjacent to grey-2. */
+  --cream-rule: #e8dfc8; /* Hairline rules on the cream surface, in place of rule-color. */
+  --grey-body-sm: #555555; /* Body small (14px): captions, meta, footer text and card descriptions on white and cream. */
+  --logo-keyline: #84a1c2; /* Periwinkle keylines inside the short white logo's medallion. A logo colour, not a UI colour. */
+  --prog-corner: #1f3a5f; /* In Your Corner program colour (advocacy and legal support). Card bars, megamenu bars, icons. */
+  --prog-company: #5778a2; /* In Good Company program colour. Card bars, megamenu bars, icons. */
+  --prog-resilient: #2d7d9a; /* Resilient Vet program colour (wellbeing and financial mentoring). Card bars, megamenu bars, icons. */
+  --prog-ce: #1a5560; /* Real-World CE program colour. Card bars, event date eyebrows, icons. */
+  --prog-practice: #6b7a3a; /* Your Practice, Your Path program colour (olive). Card bars, megamenu bars, icons. */
+  --prog-animals: #a86846; /* For Animals Together program colour (warm earth). Card bars, megamenu bars, icons. */
+  --prog-know: #3a4a78; /* In the Know program colour (publications and news, deep periwinkle). Card bars, megamenu bars, icons. */
+  --text-heading: var(--blue-2-deep); /* Headline text on white, grey-2 and cream. */
+  --text-body: var(--grey-1); /* Body text on white, grey-2 and cream. */
+  --text-muted: var(--grey-body-sm); /* Small meta and caption text on white and cream. */
+  --text-accent: var(--blue-1); /* Eyebrows, ledes and taglines on white. */
+  --text-on-dark: var(--white); /* Primary text on surface-dark. */
+  --text-on-dark-muted: var(--blue-1-soft); /* Secondary text, eyebrows and ledes on surface-dark. */
+  --text-link: var(--blue-2); /* Link text on white, grey-2 and cream. No underline on body links. */
+  --text-link-hover: var(--blue-2-deep); /* Link hover text. */
+  --text-emphasis: var(--blue-3); /* Italic emphasis inside a headline. */
+  --text-ember: var(--ember); /* Ember credentials and dates in attributions, on white and cream. 4.2:1 on cream is below the 4.5:1 floor for small text: source pair kept, flagged. */
+  --text-ember-hover: var(--ember-deep); /* Hover for ember text. */
+  --text-on-cream: var(--grey-1); /* Body text on surface-cream. */
+  --text-on-cream-muted: var(--grey-body-sm); /* Meta text on surface-cream. */
+  --surface-page: var(--white); /* Default page background. */
+  --surface-soft: var(--grey-2); /* Soft interface sections. */
+  --surface-card: var(--white); /* Card background. */
+  --surface-dark: var(--blue-2-deep); /* Navy accent panels, utility bar, footer and closing CTA bands. One or two per page, never adjacent. */
+  --surface-cream: var(--cream); /* Long-form editorial sections. */
+  --surface-hover: var(--grey-2); /* Hover fill for nav, megamenu and list rows. */
+  --action-bg: var(--blue-2); /* Primary button fill. */
+  --action-bg-hover: var(--blue-2-deep); /* Primary button hover fill. Never an opacity change or lift. */
+  --action-fg: var(--white); /* Primary button label. */
+  --action-bg-on-dark: var(--white); /* On-dark button fill. */
+  --action-bg-on-dark-hover: var(--blue-1-soft); /* On-dark button hover fill. */
+  --action-fg-on-dark: var(--blue-2-deep); /* On-dark button label. */
+  --border-default: var(--rule-color); /* Default divider and card border. */
+  --border-strong: var(--blue-2); /* Secondary button underline and nav active underline. */
+  --border-on-cream: var(--cream-rule); /* Dividers on surface-cream. */
+  --accent-ember: var(--ember); /* Ember accent marks in editorial components. */
+  --shadow-menu: 0 16px 32px rgba(31,58,95,0.08); /* Under the megamenu panel only. */
+  --shadow-card-hover: 0 8px 24px rgba(31,58,95,0.10); /* A hovered card only. */
+}
+:root {
+  --size-display: 52px; /* Display headline, 52px desktop (Roboto 500). */
+  --size-h1: 40px; /* H1, 40px desktop. */
+  --size-h2: 32px; /* H2, 32px desktop. */
+  --size-h3: 24px; /* H3 and card titles, 24px. */
+  --size-h4: 18px; /* H4, 18px. */
+  --size-body-lg: 18px; /* Ledes and large body, 18px. */
+  --size-body: 17px; /* Body copy, 17px (not 16). */
+  --size-body-sm: 14px; /* Captions, meta, taglines and card descriptions, 14px. */
+  --size-eyebrow: 12px; /* Eyebrows and tracked micro-type, 12px. */
+  --size-display-m: 38px; /* Display on mobile, 38px. */
+  --size-h1-m: 32px; /* H1 on mobile, 32px. */
+  --size-h2-m: 26px; /* H2 on mobile, 26px. */
+  --size-h3-m: 20px; /* H3 on mobile, 20px. */
+  --size-editorial-lg: 34px; /* Newsreader serif pull quote, 34px. */
+  --size-editorial: 20px; /* Newsreader attribution name, 20px. */
+  --size-attribution: 15px; /* Attribution credentials and role, 15px italic. */
+  --space-xs: 8px; /* 8px. Tight gaps inside components. */
+  --space-sm: 16px; /* 16px. Gaps between related elements. */
+  --space-md: 24px; /* 24px. Grid gaps. */
+  --space-lg: 32px; /* 32px. Card padding. */
+  --space-xl: 48px; /* 48px. Section bottom padding. */
+  --space-xxl: 64px; /* 64px. Section top padding. */
+  --space-xxxl: 96px; /* 96px. Hero padding. */
+  --space-card-title: 12px; /* 12px. Gap between a card's icon row and its title. */
+  --border-thin: 1px; /* 1px dividers and rules. */
+  --border-medium: 2px; /* 2px link underlines and secondary buttons. */
+  --border-thick: 4px; /* 4px card colour bars. */
+  --border-accent-bar: 6px; /* 6px megamenu program bars (8px on hover). */
+  --content-width: 80%; /* Fluid container width. */
+  --content-max-width: 1400px; /* Container cap. */
+  --header-row-width: 91%; /* Header row width, lining the logo up with the nav. */
+  --measure-lede: 720px; /* Lede measure. */
+  --measure-prose: 720px; /* Long-form prose measure. */
+  --mobile-nav-width: 380px; /* Off-canvas mobile panel width. */
+  --radius-none: 0px; /* Buttons, nav, accent and feature panels: anything to click or making a point. */
+  --radius-card: 6px; /* Cards, photos in content and anything to read. */
+  --weight-body: 400; /* Lato body, ledes and taglines. */
+  --weight-medium: 500; /* Roboto headlines (the default). */
+  --weight-bold: 700; /* Roboto eyebrows, button text and emphasis only. */
+  --tracking-eyebrow: 0.16em; /* Eyebrows, column headings, stat labels. */
+  --tracking-button: 0.5px; /* Button labels. */
+  --tracking-tight: -0.015em; /* H1. */
+  --tracking-display: -0.02em; /* Display. */
+  --tracking-h2: -0.01em; /* H2. */
+  --leading-display: 1.1; /* Display. */
+  --leading-h1: 1.15; /* H1. */
+  --leading-h2: 1.2; /* H2. */
+  --leading-h3: 1.25; /* H3. */
+  --leading-lede: 1.5; /* Ledes. */
+  --leading-body: 1.65; /* Body copy. */
+  --leading-body-sm: 1.55; /* Body small. */
+  --leading-eyebrow: 1.2; /* Eyebrows. */
+  --leading-tagline: 1.4; /* Taglines. */
+  --leading-editorial: 1.35; /* Newsreader pull quotes and attributions. */
+  --ease: ease; /* The only easing curve. */
+  --dur-fast: 0.15s; /* Micro-interactions: colour and underline changes. */
+  --dur-base: 0.2s; /* Panels and cards. Nothing animates longer. */
+  --transition-link: color 0.2s ease,box-shadow 0.2s ease; /* Link and nav hover transition. */
+  --transition-card: transform 0.2s ease,box-shadow 0.2s ease; /* Card hover transition. */
+  --card-hover-lift: translateY(-2px); /* The single 2px card lift on hover. */
+  --font-roboto: "Roboto","Helvetica Neue",Arial,sans-serif;
+  --font-lato: "Lato","Helvetica Neue",Arial,sans-serif;
+  --font-newsreader: "Newsreader","Iowan Old Style","Georgia",serif;
+  --text-display: 500 52px/1.1 var(--font-roboto); /* Hero headlines. 38px on mobile. */
+  --text-h1: 500 40px/1.15 var(--font-roboto); /* Page and section titles. 32px on mobile. */
+  --text-h2: 500 32px/1.2 var(--font-roboto); /* Subsections. 26px on mobile. */
+  --text-h3: 500 24px/1.25 var(--font-roboto); /* Card titles. 20px on mobile. */
+  --text-h4: 500 18px/1.3 var(--font-roboto); /* Minor headings. */
+  --text-eyebrow: 700 12px/1.2 var(--font-roboto); /* Tracked uppercase labels that open sections; set uppercase. */
+  --text-lede: italic 400 18px/1.5 var(--font-lato); /* One italic framing sentence under a headline, 720px measure. 400 italic, never Light 300. */
+  --text-body-sm: 400 14px/1.55 var(--font-lato); /* Captions, meta, footer text and card descriptions. */
+  --text-tagline: italic 400 14px/1.4 var(--font-lato); /* Italic descriptor under a title; program taglines. */
+  --text-pull-quote: 400 34px/1.35 var(--font-newsreader); /* Serif pull quote on the web. */
+  --text-attribution-name: 500 20px/1.35 var(--font-newsreader); /* Attribution name. */
+  --text-attribution-meta: italic 400 15px/1.35 var(--font-newsreader); /* Attribution credentials and role, italic. */
+}
+.display {
+  font-family: var(--font-roboto);
+  font-size: 52px;
+  line-height: 1.1;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+.h1 {
+  font-family: var(--font-roboto);
+  font-size: 40px;
+  line-height: 1.15;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+}
+.h2 {
+  font-family: var(--font-roboto);
+  font-size: 32px;
+  line-height: 1.2;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.h3 {
+  font-family: var(--font-roboto);
+  font-size: 24px;
+  line-height: 1.25;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.h4 {
+  font-family: var(--font-roboto);
+  font-size: 18px;
+  line-height: 1.3;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.eyebrow {
+  font-family: var(--font-roboto);
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+}
+.lede {
+  font-family: var(--font-lato);
+  font-size: 18px;
+  line-height: 1.5;
+  font-weight: 400;
+  letter-spacing: 0;
+  font-style: italic;
+}
+.body {
+  font-family: var(--font-lato);
+  font-size: 17px;
+  line-height: 1.65;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.body-sm {
+  font-family: var(--font-lato);
+  font-size: 14px;
+  line-height: 1.55;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.tagline {
+  font-family: var(--font-lato);
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 400;
+  letter-spacing: 0;
+  font-style: italic;
+}
+.pull-quote {
+  font-family: var(--font-newsreader);
+  font-size: 34px;
+  line-height: 1.35;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+.attribution-name {
+  font-family: var(--font-newsreader);
+  font-size: 20px;
+  line-height: 1.35;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+.attribution-meta {
+  font-family: var(--font-newsreader);
+  font-size: 15px;
+  line-height: 1.35;
+  font-weight: 400;
+  letter-spacing: 0;
+  font-style: italic;
+}

@@ -1,4 +1,5 @@
-// Mediation portal app v02 (2026-11-04). v02: Admin page (#/admin, staff) and View as (read-only, 2 hours).
+// Mediation portal app v03 (2026-11-06). v03: public pages redesigned (design/redesign 01-05, 24-25): About, 4-step request form, received, sign in with 6-box code.
+// v02 (2026-11-04). v02: Admin page (#/admin, staff) and View as (read-only, 2 hours).
 // v01 (2026-11-04). Plain JS, hash routes:
 //   #/ (home: public about page, or the signed-in person's lists)   #/file (public complaint form)   #/signin
 //   #/c/<id> (one complaint)   #/c/<id>/letter (draft a letter)   #/feedback/<id>   #/facilitators   #/letters   #/guide
@@ -21,7 +22,7 @@ function el(tag, attrs, ...kids) {
   for (const k of kids.flat(Infinity)) if (k != null && k !== false && k !== "") n.append(typeof k === "string" ? document.createTextNode(k) : k);
   return n;
 }
-const show = (...kids) => { main.replaceChildren(); for (const k of kids.flat(Infinity)) if (k) main.append(k); window.scrollTo(0, 0); };
+const show = (...kids) => { main.className = "in main-in"; main.parentElement.classList.remove("rd-soft"); main.replaceChildren(); for (const k of kids.flat(Infinity)) if (k) main.append(k); window.scrollTo(0, 0); };
 const $ = (id) => document.getElementById(id);
 function toast(msg, bad) {
   const t = $("toast"); t.textContent = msg; t.className = "toast" + (bad ? " bad" : ""); t.hidden = false;
@@ -109,89 +110,292 @@ async function route() {
 }
 window.addEventListener("hashchange", route);
 
+// ---- redesign helpers (design/redesign, scoped by rd.css) ----
+// showRd renders a redesigned page: #main gets the .rd scope; soft = grey page ground (sign-in).
+function showRd(opts, ...kids) {
+  main.className = "rd rd-wrap" + (opts.narrow ? " rd-narrow" : "");
+  main.parentElement.classList.toggle("rd-soft", !!opts.soft);
+  main.replaceChildren();
+  for (const k of kids.flat(Infinity)) if (k) main.append(k);
+  if (!opts.keep) window.scrollTo(0, 0);
+}
+const ICO = {
+  right: ["M5 12h14", "M12 5l7 7-7 7"], left: ["M19 12H5", "M12 19l-7-7 7-7"], check: ["M20 6 9 17l-5-5"],
+  clock: ["M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z", "M12 6v6l4 2"], info: ["M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20z", "M12 16v-4", "M12 8h.01"],
+  ext: ["M15 3h6v6", "M10 14 21 3", "M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"],
+  clip: ["m21.4 11.1-9.2 9.2a6 6 0 0 1-8.5-8.5l9.2-9.2a4 4 0 0 1 5.7 5.7l-9.2 9.2a2 2 0 0 1-2.8-2.8l8.5-8.5"],
+  alert: ["M12 3 2 21h20L12 3z", "M12 10v4", "M12 17h.01"]
+};
+function ico(name) {
+  const NS = "http://www.w3.org/2000/svg", s = document.createElementNS(NS, "svg");
+  s.setAttribute("viewBox", "0 0 24 24"); s.setAttribute("class", "ico"); s.setAttribute("aria-hidden", "true");
+  for (const d of ICO[name] || []) { const p = document.createElementNS(NS, "path"); p.setAttribute("d", d); s.append(p); }
+  return s;
+}
+// Outside help for requests we can't take. Tim to confirm these addresses.
+const HELP = {
+  fees: { label: "NY Attorney General: consumer help", href: "https://ag.ny.gov/" },
+  opd: { label: "NY State Office of the Professions", href: "https://www.op.nysed.gov/" }
+};
+const extLink = (h, cls = "sm strong") => el("a", { class: cls, href: h.href, target: "_blank", rel: "noopener" }, h.label, " ", ico("ext"));
+// The wording owners agreed to in the Knack form, kept word for word.
+const SERVICE_TEXT = ["Our mediation service is most helpful when your pet has been harmed or has died and you have concerns about the treatment provided by your veterinarian. You should first attempt to discuss your concerns with your veterinarian, but sometimes a third party is needed to help you get a satisfactory response.",
+  "We do not have the ability to impose fines or suspend licenses. We are not able to negotiate financial settlements."];
+const TERMS_TEXT = ["We offer a free service, and in return we ask you to confirm that you waive all rights to make any claim against the New York State Veterinary Medical Society for any action or information we provide."];
+
 // ---- public pages ----
 function about() {
-  show(
-    el("p", { class: "eyebrow", text: "Mediation for pet owners" }),
-    el("h1", { text: "Help understanding the care your animal received" }),
-    el("p", { class: "lede", text: "NYSVMS volunteer veterinarians help pet owners understand the treatment provided by a veterinarian who is a member of the Society, and help communicate your concerns to them. We have no connection to the State licensing board and cannot impose penalties or remove licenses." }),
-    el("div", { class: "cards" },
-      el("div", { class: "card" }, el("h3", { text: "We can help with" }), el("p", { class: "small muted", text: "Questions about the diagnosis, treatment or communication you received from an NYSVMS member veterinarian." })),
-      el("div", { class: "card" }, el("h3", { text: "Fees and billing" }), el("p", { class: "small muted", text: "We can't review what a practice charges. For a dispute about fees, contact a consumer protection organization." })),
-      el("div", { class: "card" }, el("h3", { text: "Discipline" }), el("p", { class: "small muted", text: "For fines or license action, contact the NY State Office of the Professions, Office of Professional Discipline." }))),
-    el("div", { class: "row" }, el("a", { class: "btn", href: "#/file", text: "Request mediation" }), el("a", { class: "btn-outline", href: "#/signin", text: "Check on a request" })));
+  const fit = (pill, kind, title, text, link) => el("div", { class: "card stack g12" + (kind === "p-ok" ? " fit" : "") },
+    el("span", { class: "pill " + kind, text: pill }), el("h3", { class: "t3", text: title }), el("p", { class: "sm muted", text }), link);
+  showRd({},
+    el("div", { class: "cols", style: "gap:48px;align-items:center;margin-bottom:56px" },
+      el("div", { class: "colmain", style: "gap:20px" },
+        el("p", { class: "eyebrow", text: "Mediation for pet owners" }),
+        el("h1", { class: "t1 hero", text: "Help understanding the care your animal received" }),
+        el("p", { style: "max-width:680px", text: "NYSVMS volunteer veterinarians help pet owners understand the treatment provided by a veterinarian who is a member of the Society, and help communicate your concerns to them." }),
+        el("div", { class: "row g12", style: "margin-top:8px" },
+          el("a", { class: "btn lg", href: "#/file" }, "Start a request", ico("right")),
+          el("a", { class: "btn2 lg", href: "#/signin", text: "Check on a request" })),
+        el("div", { class: "row g24 sm muted", style: "margin-top:4px" },
+          el("span", { class: "row g8" }, ico("clock"), "About 10 minutes to fill in"),
+          el("span", { class: "row g8" }, ico("check"), "A volunteer is usually assigned within two weeks"))),
+      el("aside", { class: "colside navy stack g12", style: "flex:1 1 340px" },
+        el("h2", { class: "t3", style: "font-size:20px", text: "Please know before you start" }),
+        el("p", { text: "We have no connection to the State licensing board and cannot impose penalties or remove licenses." }),
+        el("p", { text: "We can only help when the veterinarian is a member of NYSVMS." }))),
+    el("section", { style: "margin-bottom:56px", "aria-labelledby": "how" },
+      el("h2", { id: "how", class: "t2", style: "margin-bottom:24px", text: "How it works" }),
+      el("ol", { class: "grid3" },
+        [["Tell us what happened", "Answer a few questions about the visit and your veterinarian. You can attach records and photos."],
+         ["A volunteer is assigned", "A volunteer veterinarian, your facilitator, is usually assigned within two weeks and contacts you directly by email or phone."],
+         ["They talk with your vet", "Your facilitator helps you understand the care and shares your concerns with the veterinarian. You can sign in any time to see where things stand."]]
+          .map(([t, d], i) => el("li", { class: "card stack g12" }, el("span", { class: "kpi", "aria-hidden": "true", text: String(i + 1) }), el("h3", { class: "t3", text: t }), el("p", { class: "sm muted", text: d }))))),
+    el("section", { "aria-labelledby": "fit" },
+      el("h2", { id: "fit", class: "t2", style: "margin-bottom:8px", text: "Is mediation right for you?" }),
+      el("p", { class: "muted", style: "margin-bottom:24px", text: "If your concern is about fees or discipline, another organization can help you faster." }),
+      el("div", { class: "grid3" },
+        fit("We can help", "p-ok", "Questions about care", "Questions about the diagnosis, treatment or communication you received from an NYSVMS member veterinarian.", el("a", { class: "sm strong", href: "#/file", text: "Start a request" })),
+        fit("Not something we review", "p-mute", "Fees and billing", "We can't review what a practice charges. For a dispute about fees, contact a consumer protection organization.", extLink(HELP.fees)),
+        fit("Not something we review", "p-mute", "Discipline or license action", "For fines or license action, contact the NY State Office of the Professions, Office of Professional Discipline.", extLink(HELP.opd)))));
 }
 
+// Sign in: email, then a 6-box code (paste fills all six).
+let signinEmail = "";
 function signIn() {
   if (me) { location.hash = "#/"; return; }
-  const email = el("input", { id: "si-email", type: "email", autocomplete: "email", required: true });
-  const code = el("input", { id: "si-code", type: "text", inputmode: "numeric", autocomplete: "one-time-code", class: "code-box", maxlength: "7" });
-  const codeWrap = el("div", { hidden: true }, el("label", { for: "si-code", text: "6-digit code" }), code, el("p", { class: "hint", text: "Codes expire after 10 minutes. Check your spam folder if it hasn't arrived." }));
   const msg = el("div");
-  const btn = el("button", { class: "btn", type: "submit", text: "Email me a code" });
-  const form = el("form", { class: "panel", style: "max-width:480px" }, el("label", { for: "si-email", text: "Email" }), email, codeWrap, msg, el("div", { class: "row", style: "margin-top:16px" }, btn));
+  const email = el("input", { id: "si-email", class: "input", type: "email", autocomplete: "email", placeholder: "you@example.com", value: signinEmail });
+  const btn = el("button", { class: "btn lg full", type: "submit", text: "Email me a code" });
+  const form = el("form", { class: "stack g16", novalidate: true },
+    el("div", { class: "field" }, el("label", { for: "si-email", text: "Email address" }), email), msg, btn);
   form.addEventListener("submit", async (e) => {
-    e.preventDefault(); msg.replaceChildren(); btn.disabled = true;
-    try {
-      if (codeWrap.hidden) {
-        await post("/api/auth/code-request", { email: email.value });
-        codeWrap.hidden = false; btn.textContent = "Sign in"; code.focus();
-        msg.append(el("p", { class: "note", text: "If that email is linked to a mediation request or a facilitator account, a code is on its way." }));
-      } else {
-        await post("/api/auth/code-verify", { email: email.value, code: code.value });
-        me = await api("/api/auth/session"); location.hash = "#/"; route();
-      }
-    } catch (err) { msg.append(el("div", { class: "err", text: err.message })); }
-    btn.disabled = false;
+    e.preventDefault(); msg.replaceChildren();
+    if (!/^\S+@\S+\.\S+$/.test(email.value.trim())) { msg.append(el("div", { class: "alert a-attn" }, ico("alert"), "Enter the email address you used.")); email.setAttribute("aria-invalid", "true"); return; }
+    btn.disabled = true;
+    try { await post("/api/auth/code-request", { email: email.value.trim() }); signinEmail = email.value.trim(); codeStep(); }
+    catch (err) { msg.append(el("div", { class: "alert a-attn" }, ico("alert"), err.message)); btn.disabled = false; }
   });
-  show(el("p", { class: "eyebrow", text: "Sign in" }), el("h1", { text: "We'll email you a code" }),
-    el("p", { class: "lede", text: "No password to remember. Enter the email you used when you requested mediation, or the email NYSVMS has for you if you are a facilitator." }), form);
+  showRd({ soft: true }, el("div", { style: "display:flex;justify-content:center;padding-top:24px" },
+    el("div", { class: "card stack g24 signin-card", style: "width:100%;max-width:480px;padding:40px" },
+      el("div", { class: "stack g12" }, el("p", { class: "eyebrow", text: "Sign in" }), el("h1", { class: "t1", style: "font-size:32px", text: "We'll email you a code" }),
+        el("p", { class: "muted", text: "No password to remember. Use the email from your mediation request, or the email NYSVMS has for you as a facilitator or staff member." })),
+      form, el("hr", { class: "divider" }),
+      el("p", { class: "sm muted" }, "Don't have a request yet? ", el("a", { href: "#/file", text: "Start a request" })))));
+  email.focus();
+}
+function codeStep() {
+  const boxes = [0, 1, 2, 3, 4, 5].map((i) => el("input", { class: "input", inputmode: "numeric", maxlength: "1", autocomplete: i === 0 ? "one-time-code" : "off", "aria-label": `Digit ${i + 1}` }));
+  const fill = (digits, from = 0) => { digits.split("").slice(0, 6 - from).forEach((d, j) => (boxes[from + j].value = d)); boxes[Math.min(from + digits.length, 5)].focus(); };
+  boxes.forEach((b, i) => {
+    b.addEventListener("input", () => { const d = b.value.replace(/\D/g, ""); b.value = ""; if (d) fill(d, i); if (boxes.every((x) => x.value)) form.requestSubmit(); });
+    b.addEventListener("keydown", (e) => { if (e.key === "Backspace" && !b.value && i) { boxes[i - 1].value = ""; boxes[i - 1].focus(); e.preventDefault(); } });
+    b.addEventListener("paste", (e) => { const d = (e.clipboardData.getData("text") || "").replace(/\D/g, ""); if (d) { e.preventDefault(); fill(d, i); if (boxes.every((x) => x.value)) form.requestSubmit(); } });
+  });
+  const msg = el("div");
+  const btn = el("button", { class: "btn lg full", type: "submit", text: "Sign in" });
+  const form = el("form", { class: "stack g16", novalidate: true },
+    el("fieldset", { class: "fs" }, el("legend", { style: "font-size:15px", text: "6-digit code" }), el("div", { class: "code" }, boxes),
+      el("p", { class: "help", text: "Codes expire after 10 minutes. You can paste the whole code into the first box." })), msg, btn);
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault(); msg.replaceChildren();
+    const code = boxes.map((b) => b.value).join("");
+    if (code.length !== 6) { msg.append(el("div", { class: "alert a-attn" }, ico("alert"), "Enter all six digits.")); return; }
+    btn.disabled = true;
+    try { await post("/api/auth/code-verify", { email: signinEmail, code }); me = await api("/api/auth/session"); location.hash = "#/"; route(); }
+    catch (err) { msg.append(el("div", { class: "alert a-attn" }, ico("alert"), err.message)); btn.disabled = false; boxes.forEach((b) => (b.value = "")); boxes[0].focus(); }
+  });
+  const resend = el("a", { class: "strong", href: "#", text: "send a new code", onclick: async (e) => {
+    e.preventDefault();
+    try { await post("/api/auth/code-request", { email: signinEmail }); toast("A new code is on its way"); } catch (err) { toast(err.message, true); }
+  } });
+  showRd({ soft: true }, el("div", { style: "display:flex;justify-content:center;padding-top:24px" },
+    el("div", { class: "card stack g24 signin-card", style: "width:100%;max-width:480px;padding:40px" },
+      el("a", { class: "back", href: "#/signin", style: "margin:-8px 0 -8px -2px", onclick: (e) => { e.preventDefault(); signIn(); } }, ico("left"), "Use a different email"),
+      el("div", { class: "stack g12" }, el("p", { class: "eyebrow", text: "Sign in" }), el("h1", { class: "t1", style: "font-size:32px", text: "Check your email" }),
+        el("p", { class: "muted" }, "If ", el("span", { class: "strong", style: "color:#333", text: signinEmail }), " is linked to a mediation request or a facilitator account, we've sent it a 6-digit code.")),
+      form, el("hr", { class: "divider" }),
+      el("div", { class: "stack g8 sm muted" },
+        el("span", {}, "Nothing yet? Check your spam folder, then ", resend, "."),
+        el("span", {}, "Still stuck? Email ", el("a", { href: "mailto:staff@nysvms.org", text: "staff@nysvms.org" }))))));
+  boxes[0].focus();
 }
 
-function fileForm() {
-  const f = (id, label, type = "text", attrs = {}) => [el("label", { for: id, text: label }), el(type === "textarea" ? "textarea" : "input", { id, ...(type === "textarea" ? {} : { type }), ...attrs })];
-  const ATT = [["a_legal", "I have not taken any legal action about this."], ["a_opd", "I have not complained to the NYS Office of Professional Discipline."],
-    ["a_fees", "My request is not about fees or the cost of services."], ["a_member", "I have confirmed the veterinarian is a member of NYSVMS."],
-    ["a_service", "I have read and understood how this service works (see About)."], ["a_terms", "I have read and accept the terms, including the indemnity."]];
+// Request mediation: four steps, answers kept in `req` while moving between them.
+const REQ_STEPS = ["Check we can help", "Your veterinarian", "What happened", "About you"];
+let req = null;
+const newReq = () => ({ step: 0, legal: "", opd: "", fees: "", member: "", service: false, terms: false, vet_name: "", practice: "", practice_address: "", vet_email: "",
+  subject: "", description: "", uploads: [], records_ok: false, release: [], name: "", email: "", phone: "", address: "", website: "" });
+function fileForm(keep) {
+  if (!req) req = newReq();
+  const s = req.step;
   const msg = el("div");
-  const btn = el("button", { class: "btn", type: "submit", text: "Submit request" });
-  const form = el("form", { class: "grid2", novalidate: true },
-    el("div", {},
-      el("fieldset", {}, el("legend", { text: "Before you start" }), ATT.map(([k, t]) => el("div", { class: "check" }, el("input", { type: "checkbox", id: k }), el("label", { for: k, text: t })))),
-      el("fieldset", {}, el("legend", { text: "The veterinarian" }), f("vet_name", "Veterinarian's name"), f("practice", "Practice name"), f("practice_address", "Practice address"),
-        f("vet_email", "Veterinarian's email (if you have it)", "email"), el("p", { class: "hint", text: "Optional. It helps your facilitator reach them sooner." })),
-      el("fieldset", {}, el("legend", { text: "Your request" }), f("subject", "In one sentence, what would you like help with?"), f("description", "What happened", "textarea"),
-        el("label", { for: "uploads", text: "Records, photos or other documents (optional)" }), el("input", { id: "uploads", type: "file", multiple: true, accept: ".pdf,.doc,.docx,.jpg,.jpeg,.png,.heic,.txt" }),
-        el("p", { class: "hint", text: "Up to 4 MB per file." }),
-        el("div", { class: "check" }, el("input", { type: "checkbox", id: "records_ok" }), el("label", { for: "records_ok", text: "I give my veterinarian permission to share my pet's records with NYSVMS." })),
-        el("label", { for: "release", text: "Signed records release form (optional)" }), el("input", { id: "release", type: "file", accept: ".pdf,.doc,.docx,.jpg,.jpeg,.png" }))),
-    el("div", {},
-      el("div", { class: "panel" }, el("h2", { text: "About you" }), f("name", "Your name"), f("email", "Email", "email", { autocomplete: "email" }), f("phone", "Phone", "tel", { autocomplete: "tel" }), f("address", "Mailing address"),
-        el("div", { class: "hp", "aria-hidden": "true" }, el("label", { for: "website", text: "Leave this empty" }), el("input", { id: "website", type: "text", tabindex: "-1", autocomplete: "off" })),
-        el("p", { class: "hint", text: "We email you a confirmation and your request number. Use this email to sign in and check on it later." }), msg,
-        el("div", { class: "row", style: "margin-top:18px" }, btn)),
-      el("div", { class: "note", style: "margin-top:18px", text: "A volunteer veterinarian is usually assigned within two weeks. They will contact you directly." })));
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault(); msg.replaceChildren(); btn.disabled = true; btn.textContent = "Submitting…";
-    const v = (id) => $(id).value;
-    const data = { name: v("name"), email: v("email"), phone: v("phone"), address: v("address"), vet_name: v("vet_name"), vet_email: v("vet_email"), practice: v("practice"),
-      practice_address: v("practice_address"), subject: v("subject"), description: v("description"), records_ok: $("records_ok").checked, website: v("website") };
-    for (const [k] of ATT) data[k] = $(k).checked;
-    try {
-      const out = await post("/api/intake", data);
-      const failed = [];
-      if (out.ticket) {
-        failed.push(...(await uploadFiles([...$("uploads").files], { complaint: out.complaint, ticket: out.ticket, field: "uploads" })));
-        failed.push(...(await uploadFiles([...$("release").files], { complaint: out.complaint, ticket: out.ticket, field: "release" })));
-      }
-      show(el("p", { class: "eyebrow", text: "Request received" }), el("h1", { text: `Thank you. Your request number is #${out.n}.` }),
-        el("p", { class: "lede", text: "We've emailed you a confirmation. A volunteer veterinarian will be assigned and will contact you directly. You can check on your request at any time by signing in with your email." }),
-        failed.length ? el("div", { class: "err", text: `These files didn't upload: ${failed.join(", ")}. Please email them to staff@nysvms.org with your request number.` }) : null,
-        el("div", { class: "row" }, el("a", { class: "btn", href: "#/signin", text: "Sign in to check on it" })));
-    } catch (err) { msg.append(el("div", { class: "err", text: err.message })); btn.disabled = false; btn.textContent = "Submit request"; }
-  });
-  show(el("p", { class: "eyebrow", text: "Request mediation" }), el("h1", { text: "Tell us what happened" }),
-    el("p", { class: "lede", text: "This takes about ten minutes. Please read About first: we can only help with NYSVMS member veterinarians, and not with fees or discipline." }), form);
+  const input = (id, label, opts = {}) => {
+    const n = el(opts.area ? "textarea" : "input", { id, class: opts.area ? "textarea" : "input", ...(opts.area ? {} : { type: opts.type || "text" }), autocomplete: opts.ac || "off", placeholder: opts.ph || false });
+    n.value = req[id]; n.addEventListener("input", () => { req[id] = n.value; n.removeAttribute("aria-invalid"); });
+    return el("div", { class: "field" }, el("label", { for: id }, label, opts.optional ? el("span", { class: "opt", text: " (optional)" }) : null), n, opts.help ? el("span", { class: "help", text: opts.help }) : null);
+  };
+  const yesNo = (key, legend, choices, help) => {
+    const name = "q-" + key;
+    return el("fieldset", { class: "fs" }, el("legend", { text: legend }),
+      el("div", { class: "seg", role: "radiogroup" }, choices.map(([v, l]) => el("label", {}, (() => { const r = el("input", { type: "radio", name, value: v }); r.checked = req[key] === v; r.addEventListener("change", () => { req[key] = v; fileForm(true); }); return r; })(), l))),
+      help || null);
+  };
+  const check = (key, content) => { const c = el("input", { type: "checkbox", id: "cb-" + key }); c.checked = req[key]; c.addEventListener("change", () => { req[key] = c.checked; }); return el("label", { class: "choice", for: "cb-" + key }, c, content); };
+  const filePicker = (key, label, multiple) => {
+    const pick = el("input", { type: "file", multiple: multiple || false, accept: ".pdf,.doc,.docx,.jpg,.jpeg,.png,.heic,.txt", style: "display:none" });
+    const list = el("ul", { class: "filelist" });
+    const draw = () => list.replaceChildren(...req[key].map((f, i) => el("li", {}, el("span", {}, f.name, el("span", { class: "sm muted", text: ` · ${Math.max(1, Math.round(f.size / 1024))} KB${f.size > 4194304 ? " (too big, over 4 MB)" : ""}` })),
+      el("button", { class: "btnq", type: "button", text: "Remove", onclick: () => { req[key].splice(i, 1); draw(); } }))));
+    pick.addEventListener("change", () => { req[key] = multiple ? [...req[key], ...pick.files] : [...pick.files].slice(0, 1); pick.value = ""; draw(); });
+    draw();
+    return el("div", { class: "field" }, el("span", { class: "lbl" }, label, el("span", { class: "opt", text: " (optional)" })),
+      el("div", { class: "drop" }, el("button", { class: "btn2", type: "button", onclick: () => pick.click() }, ico("clip"), multiple ? "Add files" : "Add the form"), el("span", { class: "sm muted", text: "Up to 4 MB per file" }), list, pick));
+  };
+  // Answers that mean another organization is the right place.
+  const referral = () => {
+    if (req.legal === "yes") return el("div", { class: "alert a-warn" }, ico("info"), el("span", {}, "We can't mediate once legal action has been taken. Your lawyer is the best person to help from here."));
+    if (req.opd === "yes") return el("div", { class: "alert a-warn" }, ico("info"), el("span", {}, "Once the Office of Professional Discipline is involved, we can't mediate as well. ", extLink(HELP.opd, "strong")));
+    if (req.fees === "yes") return el("div", { class: "alert a-warn" }, ico("info"), el("span", {}, "We can't review what a practice charges. A consumer protection organization can help: ", extLink(HELP.fees, "strong")));
+    if (req.member === "no") return el("div", { class: "alert a-warn" }, ico("info"), el("span", {}, "We can only help when the veterinarian is a member of NYSVMS. For other concerns, the practice owner is usually the best first contact."));
+    return null;
+  };
+  const steps = el("ol", { class: "steps", "aria-label": `Form progress: step ${s + 1} of 4` }, REQ_STEPS.map((t, i) => el("li", { class: i < s ? "done" : i === s ? "now" : "" }, el("span", { class: "bar" }), el("span", { class: "lab", text: `${i + 1}. ${t}` }))));
+  let body, title, intro;
+  if (s === 0) {
+    title = "First, let's check we can help"; intro = "Answer these honestly. If mediation isn't the right fit, we'll point you somewhere that is.";
+    body = [yesNo("legal", "Have you taken any legal action about this?", [["yes", "Yes"], ["no", "No"]]), el("hr", { class: "divider" }),
+      yesNo("opd", "Have you complained to the NYS Office of Professional Discipline?", [["yes", "Yes"], ["no", "No"]]), el("hr", { class: "divider" }),
+      yesNo("fees", "Is your concern about fees or the cost of services?", [["yes", "Yes"], ["no", "No"]], el("p", { class: "help", text: "If it is, a consumer protection organization can help. We can't review what a practice charges." })), el("hr", { class: "divider" }),
+      yesNo("member", "Is the veterinarian a member of NYSVMS?", [["yes", "Yes"], ["no", "No"], ["unsure", "I'm not sure"]], el("p", { class: "help", text: req.member === "unsure" ? "That's fine. Carry on and our staff will check before a facilitator is assigned." : "Not sure? Ask the practice, or choose I'm not sure and our staff will check." })),
+      referral(), el("hr", { class: "divider" }),
+      el("div", { class: "stack g12" },
+        check("service", el("span", { class: "stack g4" }, el("span", { text: "I have read how this service works." }), el("details", { class: "terms" }, el("summary", { text: "How this service works" }), el("div", {}, SERVICE_TEXT.map((t) => el("p", { text: t })))))),
+        check("terms", el("span", { class: "stack g4" }, el("span", { text: "I have read and accept the terms, including the indemnity." }), el("details", { class: "terms" }, el("summary", { text: "Read the terms" }), el("div", {}, TERMS_TEXT.map((t) => el("p", { text: t })))))))];
+  } else if (s === 1) {
+    title = "Your veterinarian"; intro = "Tell us who you saw. Your facilitator uses this to contact them.";
+    body = [input("vet_name", "Veterinarian's name", { ph: "Dr. Lee Park" }), input("practice", "Practice name", { optional: true }), input("practice_address", "Practice address", { optional: true }),
+      input("vet_email", "Veterinarian's email", { type: "email", optional: true, help: "If you have it, it helps your facilitator reach them sooner." })];
+  } else if (s === 2) {
+    title = "What happened"; intro = "Describe the visit in your own words. There's no wrong way to tell it.";
+    body = [input("subject", "In one sentence, what would you like help with?", { help: "This becomes the title of your request." }),
+      input("description", "What happened", { area: true, ph: "When was the visit? What were you told? What would you like to understand?" }),
+      filePicker("uploads", "Records, photos or other documents", true),
+      check("records_ok", el("span", { class: "stack g4" }, el("span", { text: "I give my veterinarian permission to share my pet's records with NYSVMS." }), el("span", { class: "sm muted", text: "Helps your facilitator understand the care." }))),
+      filePicker("release", "Signed records release form", false)];
+  } else {
+    title = "About you"; intro = "We use your email to send your confirmation and to let you sign in later. No account or password needed.";
+    body = [input("name", "Your name", { ac: "name" }), input("email", "Email", { type: "email", ac: "email" }), input("phone", "Phone", { type: "tel", ac: "tel", optional: true }),
+      input("address", "Mailing address", { ac: "street-address", optional: true }),
+      el("div", { class: "hp", "aria-hidden": "true", style: "position:absolute;left:-9999px" }, el("label", { for: "website", text: "Leave this empty" }), (() => { const h = el("input", { id: "website", type: "text", tabindex: "-1", autocomplete: "off" }); h.addEventListener("input", () => (req.website = h.value)); return h; })())];
+  }
+  const blocked = s === 0 && !!referral();
+  const go = async (dir) => {
+    msg.replaceChildren();
+    if (dir < 0) { if (s === 0) { location.hash = "#/"; return; } req.step--; return fileForm(); }
+    const problem = validate(s);
+    if (problem) { msg.append(el("div", { class: "alert a-attn", role: "alert" }, ico("alert"), problem.text)); if (problem.field) { const f = $(problem.field); if (f) { f.setAttribute("aria-invalid", "true"); f.focus(); } } return; }
+    if (s < 3) { req.step++; return fileForm(); }
+    await submitRequest(nextBtns, msg);
+  };
+  const nextLabel = ["Continue to your veterinarian", "Continue to what happened", "Continue to about you", "Submit request"][s];
+  const backLabel = s === 0 ? "Back to About" : "Back";
+  const nextBtns = [];
+  const mkNext = (cls, label) => { const b = el("button", { class: cls, type: "button", disabled: blocked, onclick: () => go(1) }, label, s < 3 ? ico("right") : null); nextBtns.push(b); return b; };
+  const navDesktop = el("div", { class: "row g12 between formnav", style: "margin-top:8px" }, el("button", { class: "btnq", type: "button", onclick: () => go(-1) }, ico("left"), backLabel), mkNext("btn lg", nextLabel));
+  const navPhone = el("div", { class: "stickybar" }, el("button", { class: "btn2", type: "button", text: "Back", onclick: () => go(-1) }), mkNext("btn", s < 3 ? "Continue" : "Submit request"));
+  showRd({ keep },
+    el("div", { class: "cols", style: "gap:48px" },
+      el("div", { class: "colmain", style: "gap:28px;flex-basis:640px" },
+        el("div", { class: "stack g12" }, el("p", { class: "eyebrow", text: `Request mediation · Step ${s + 1} of 4` }), el("h1", { class: "t1", text: title }), el("p", { class: "muted", text: intro })),
+        steps,
+        el("form", { class: "stack g24", novalidate: true, onsubmit: (e) => { e.preventDefault(); go(1); } }, body, msg, navDesktop)),
+      el("aside", { class: "colside hide-phone", style: "flex-basis:320px;position:sticky;top:24px" },
+        el("div", { class: "card soft stack g16" }, el("h2", { class: "t3", text: "What you'll need" }),
+          el("ul", { class: "stack g8 sm", style: "margin:0;padding-left:18px" },
+            el("li", { text: "The veterinarian's name and practice" }), el("li", { text: "A short description of what happened" }),
+            el("li", { text: "Records or photos, if you have them (up to 4 MB each)" }), el("li", { text: "A signed records release form, if you want your facilitator to see your pet's records" })),
+          el("p", { class: "sm muted", text: "About 10 minutes in all." })),
+        el("div", { class: "alert a-info" }, ico("info"), el("span", { text: "A volunteer veterinarian is usually assigned within two weeks. They will contact you directly." })))),
+    navPhone);
+}
+function validate(s) {
+  const r = req;
+  if (s === 0) {
+    if (!r.legal || !r.opd || !r.fees || !r.member) return { text: "Please answer each question." };
+    if (!r.service || !r.terms) return { text: "Please confirm you've read how the service works and accept the terms." };
+  }
+  if (s === 1 && !r.vet_name.trim()) return { text: "Add the veterinarian's name.", field: "vet_name" };
+  if (s === 2) {
+    if (!r.subject.trim()) return { text: "Add a one-sentence summary.", field: "subject" };
+    if (!r.description.trim()) return { text: "Tell us what happened.", field: "description" };
+    if ([...r.uploads, ...r.release].some((f) => f.size > 4194304)) return { text: "One of your files is over 4 MB. Remove it, or email it to staff@nysvms.org after you submit." };
+  }
+  if (s === 3) {
+    if (!r.name.trim()) return { text: "Add your name.", field: "name" };
+    if (!/^\S+@\S+\.\S+$/.test(r.email.trim())) return { text: "Add a valid email address.", field: "email" };
+  }
+  return null;
+}
+async function submitRequest(btns, msg) {
+  btns.forEach((b) => { b.disabled = true; b.textContent = "Sending…"; });
+  const r = req;
+  const data = { name: r.name, email: r.email, phone: r.phone, address: r.address, vet_name: r.vet_name, vet_email: r.vet_email, practice: r.practice, practice_address: r.practice_address,
+    subject: r.subject, description: r.description, records_ok: r.records_ok, website: r.website,
+    a_legal: r.legal === "no", a_opd: r.opd === "no", a_fees: r.fees === "no", a_member: r.member === "yes", member_unsure: r.member === "unsure", a_service: r.service, a_terms: r.terms };
+  try {
+    const out = await post("/api/intake", data);
+    const failed = [];
+    if (out.ticket) {
+      failed.push(...(await uploadFiles(r.uploads, { complaint: out.complaint, ticket: out.ticket, field: "uploads" })));
+      failed.push(...(await uploadFiles(r.release, { complaint: out.complaint, ticket: out.ticket, field: "release" })));
+    }
+    const done = { n: out.n, name: r.name.trim().split(/\s+/)[0], email: r.email.trim(), failed };
+    req = null;
+    received(done);
+  } catch (err) {
+    msg.append(el("div", { class: "alert a-attn", role: "alert" }, ico("alert"), err.message));
+    btns.forEach((b) => { b.disabled = false; b.textContent = "Submit request"; });
+  }
+}
+function received(d) {
+  const step = (dot, now, title, text) => el("li", {}, el("span", { class: "dot" + (now ? " now" : "") }, now ? ico("check") : dot), el("div", { class: "tlbody" }, el("span", { class: "strong", text: title }), el("span", { class: "sm muted", text })));
+  showRd({},
+    el("div", { style: "max-width:820px" },
+      el("div", { class: "stack g16", style: "align-items:flex-start;margin-bottom:36px" },
+        el("span", { class: "tick" }, ico("check")),
+        el("p", { class: "eyebrow", text: "Request received" }),
+        el("h1", { class: "t1", text: d.name ? `Thank you, ${d.name}. We have your request.` : "Thank you. We have your request." }),
+        el("div", { class: "card soft row g24 between", style: "width:100%" },
+          el("div", { class: "stack g4" }, el("span", { class: "sm muted", text: "Your request number" }), el("span", { class: "kpi", style: "font-size:40px", text: `#${d.n}` })),
+          el("div", { class: "stack g4" }, el("span", { class: "sm muted", text: "Confirmation sent to" }), el("span", { class: "strong", style: "overflow-wrap:anywhere", text: d.email })))),
+      d.failed.length ? el("div", { class: "alert a-attn", style: "margin-bottom:24px" }, ico("alert"), el("span", { text: `These files didn't upload: ${d.failed.join(", ")}. Please email them to staff@nysvms.org and mention request #${d.n}.` })) : null,
+      el("h2", { class: "t2", style: "margin-bottom:20px", text: "What happens next" }),
+      el("ol", { class: "tl", style: "margin-bottom:32px" },
+        step("1", true, "Today: you sent your request", "Check your inbox for the confirmation email. If it isn't there, look in your spam folder."),
+        step("2", false, "Usually within two weeks: a volunteer is assigned", "A volunteer veterinarian becomes your facilitator and contacts you directly by email or phone."),
+        step("3", false, "Your facilitator talks with the veterinarian", "You can sign in any time with your email to see where things stand.")),
+      el("div", { class: "row g12" }, el("a", { class: "btn lg", href: "#/signin", text: "Sign in to track your request" }), el("a", { class: "btn2 lg", href: "#/", text: "Back to About" })),
+      el("p", { class: "sm muted", style: "margin-top:24px" }, "Questions? Email ", el("a", { href: "mailto:staff@nysvms.org", text: "staff@nysvms.org" }), ` and mention request #${d.n}.`)));
 }
 
 // ---- signed-in lists ----

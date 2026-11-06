@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add a person</title>
+<link rel="stylesheet" href="tokens.css">
+<link rel="stylesheet" href="portal.css">
+</head>
+<body>
+<link href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&amp;family=Roboto:wght@400;500;700&amp;display=swap" rel="stylesheet">
+<style>body{margin:0}a{color:#0f7bb3}a:hover{color:#0a5a85}</style>
+<div class="app">
+<header class="hdr"><div class="hdr-in"><a href="15-Staff-all-requests.html" aria-label="NYSVMS Mediation home"><img src="nysvms-logo-on-dark.png" alt="New York State Veterinary Medical Society"></a><span class="prod">Mediation</span><span class="sp"></span><div class="who"><span class="role">Staff</span><span>Sam Staff</span><a class="out" href="04-Sign-in-email.html">Sign out</a></div></div></header>
+<nav class="tabs" aria-label="Main"><div class="tabs-in"><a class="tab" href="15-Staff-all-requests.html">Requests</a><a class="tab" href="18-Staff-facilitators.html">Facilitators</a><a class="tab" href="19-Staff-letter-templates.html">Letter templates</a><a class="tab on" href="20-Staff-admin.html" aria-current="page">People and access</a></div></nav>
+<main class="wrap">
+<nav aria-label="Breadcrumb" class="sm" style="margin-bottom: 16px;"><a href="20-Staff-admin.html">People and access</a> <span class="muted">/ Add a person</span></nav>
+<div class="head"><h1 class="t1">Add a person</h1><p class="muted">Usually a new volunteer facilitator or a new staff member. Pet owners are added automatically when they file a request.</p></div>
+<div class="cols">
+<form class="main card" style="gap: 28px; flex-basis: 600px; max-width: 760px;">
+<div class="grid2" style="gap: 20px;">
+<div class="field"><label for="nm">Name</label><input id="nm" class="input" placeholder="Dr. First Last" autocomplete="off"></div>
+<div class="field"><label for="em">Email</label><input id="em" class="input" type="email" placeholder="name@example.org" autocomplete="off" aria-describedby="emh"><span id="emh" class="help">They sign in with this email. It can't be changed later.</span></div>
+</div>
+<fieldset class="fs"><legend>What can they do?</legend>
+<label class="choice"><input type="checkbox"><span class="stack g4"><span class="strong">Staff</span><span class="sm muted">Sees every request, assigns facilitators, uses People and access.</span></span></label>
+<label class="choice on"><input type="checkbox" checked><span class="stack g4"><span class="strong">Facilitator</span><span class="sm muted">Can be assigned requests and mediates them.</span></span></label>
+</fieldset>
+<div class="field" style="max-width: 360px;"><label for="rg">Region</label><select id="rg" class="select"><option>Choose a region</option></select><span class="help">Helps staff match facilitators to requests.</span></div>
+<div class="alert a-info"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg><span>New people start as Active. You can make them Inactive any time from their page.</span></div>
+<div class="row g12" style="border-top: 1px solid #e4e8ec; padding-top: 20px;"><button class="btn" type="button">Add person</button><a class="btnq" href="20-Staff-admin.html">Cancel</a></div>
+</form>
+</div>
+</main>
+<footer class="ftr"><div class="ftr-in"><span>New York State Veterinary Medical Society</span><span>Questions? Email <a href="mailto:staff@nysvms.org">staff@nysvms.org</a></span></div></footer>
+</div>
+</body>
+</html>
