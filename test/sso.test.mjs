@@ -48,6 +48,12 @@ test("sso: start sends the person to Novi with a one-time state held only in an 
   assert.ok(!to.searchParams.has("client_secret"), "the secret never goes to the browser");
 });
 
+test("sso: a start on another address (the custom domain) is first moved to the address Novi returns to", async () => {
+  const r = await sso(new Request("https://mediation.nysvms.org/api/auth/sso-start"));
+  assert.equal(loc(r), `${HOST}/api/auth/sso-start`);
+  assert.ok(!cookies(r).some((c) => /^cm_sso_state=[0-9a-f]/.test(c)), "no state is set on the wrong host");
+});
+
 test("sso: a callback this browser did not start is refused before Novi is contacted", async () => {
   const n = noviCalls.length;
   assert.equal(loc(await get("/api/auth/sso-callback?code=abc&state=forged", "cm_sso_state=" + "a".repeat(32))), `${HOST}/#/signin/sso-expired`);

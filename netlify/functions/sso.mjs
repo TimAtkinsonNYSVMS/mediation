@@ -40,6 +40,9 @@ export default async (req) => {
 
   if (path === "/api/auth/sso-start") {
     if (!configured()) return back("#/signin/sso-off");
+    // v02: the state cookie must live on the host Novi returns to (PORTAL_URL), or the callback cannot see it. A start on any
+    // other address (e.g. mediation.nysvms.org while PORTAL_URL is the netlify.app one) is first moved there.
+    if (url.host !== new URL(portal()).host) return new Response(null, { status: 302, headers: { location: `${portal()}/api/auth/sso-start`, "cache-control": "no-store" } });
     const state = randomBytes(16).toString("hex");
     const to = `${NOVI}/oauth/authorize?` + new URLSearchParams({
       response_type: "code", scope: "openid email profile", client_id: env("NOVI_SSO_CLIENT_ID"), redirect_uri: redirectUri(), state
