@@ -1,4 +1,5 @@
-// GET /api/complaint?id=rec… and POST /api/complaint/<action> · v02 (2026-11-04). v02: every action is refused while viewing as someone.
+// GET /api/complaint?id=rec… and POST /api/complaint/<action> · v03 (2026-11-06). v03: updates record a Type and With;
+// status changes and assignments write a dated Progress Update row (feeds the owner Activity list). v02 (2026-11-04). v02: every action is refused while viewing as someone.
 // Actions: update (log progress, optionally a drafted letter), status, resolution, assign, feedback.
 // Every check is in access.mjs (viewOf, can, statusAllowed); this file only applies the change.
 import { body, checkPost, json } from "../lib/core.mjs";
@@ -34,7 +35,10 @@ export default async (req) => {
       if (!can(me, "work", c)) return NO();
       const notes = text(b.notes), letter_type = text(b.letter_type, 200), letter_text = text(b.letter_text);
       if (!notes && !letter_text) return json({ error: "Write the update first." }, 400);
-      const u = await create("updates", { complaint: [c.id], author: [me.id], date: new Date().toISOString(), notes, ...(letter_type ? { letter_type } : {}), ...(letter_text ? { letter_text } : {}) });
+      const type = letter_type ? "Letter" : ["Call", "Email", "Note"].includes(b.type) ? b.type : "Note";
+      const withWho = ["Owner", "Veterinarian", "Other"].includes(b.with) ? b.with : null;
+      const u = await create("updates", { complaint: [c.id], author: [me.id], date: new Date().toISOString(), notes, type, ...(withWho && type !== "Note" ? { with: withWho } : {}),
+        ...(letter_type ? { letter_type } : {}), ...(letter_text ? { letter_text } : {}) });
       await noticeUpdate(c, me, notes || `Letter drafted: ${letter_type}`);
       return json({ ok: true, update: u.id });
     }
@@ -44,6 +48,7 @@ export default async (req) => {
       if (!statusAllowed(me, b.status)) return json({ error: "That status can't be set here." }, 400);
       if (b.status === c.status) return json({ ok: true });
       await update("complaints", c.id, { status: b.status });
+      await create("updates", { complaint: [c.id], author: [me.id], date: new Date().toISOString(), type: "Status change", status_set: b.status, notes: `Status changed from "${c.status || "Awaiting assignment"}" to "${b.status}"` });
       await noticeStatus(c, me, b.status);
       return json({ ok: true });
     }
@@ -61,6 +66,7 @@ export default async (req) => {
       if ((c.facilitator || []).includes(fac.id)) return json({ ok: true });
       const status = ["Awaiting assignment", "Asking mediator to accept"].includes(c.status || "Awaiting assignment") ? "Mediator Assigned" : c.status;
       await update("complaints", c.id, { facilitator: [fac.id], status });
+      await create("updates", { complaint: [c.id], author: [me.id], date: new Date().toISOString(), type: "Assigned", status_set: fac.name, notes: `${fac.name} assigned as facilitator by ${me.name}` });
       await noticeAssigned({ ...c, status }, fac, me);
       return json({ ok: true });
     }

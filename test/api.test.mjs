@@ -176,3 +176,30 @@ test("posts need the request header and the same origin", async () => {
   assert.equal((await post("complaint", "/api/complaint/update", { id: IDS.cMine, notes: "x" }, EMAILS.fac, { origin: "https://evil.example" })).status, 403);
   assert.equal((await post("intake", "/api/intake", {}, null, { origin: "https://evil.example" })).status, 403);
 });
+
+test("owner Activity: fixed sentences only, never notes; status changes and assignments are dated rows", async () => {
+  // a facilitator logs a call with the vet and a private note, and changes the status
+  await post("complaint", "/api/complaint/update", { id: IDS.cMine, notes: "PRIVATE: vet sounded defensive", type: "Call", with: "Veterinarian" }, EMAILS.fac);
+  await post("complaint", "/api/complaint/update", { id: IDS.cMine, notes: "PRIVATE second note", type: "Note" }, EMAILS.fac);
+  await post("complaint", "/api/complaint/status", { id: IDS.cMine, status: "Mediator waiting for veterinarian to respond" }, EMAILS.fac);
+  const row = RECORDS.tblzyvyYFymTo4xR6.at(-1);
+  assert.deepEqual([row.fields.fld3vGp10i4Rtbmjo, row.fields.fldenMKQCNzFzAtS3], [{ name: "Status change" }, "Mediator waiting for veterinarian to respond"]);
+  const r = await get("complaint", `/api/complaint?id=${IDS.cMine}`, EMAILS.owner);
+  const body = await r.text();
+  assert.ok(!body.includes("PRIVATE"), "notes never reach the owner");
+  const o = JSON.parse(body);
+  assert.equal(o.owner_status, "Waiting on the veterinarian");
+  const texts = o.activity.map((a) => a.text);
+  assert.ok(texts.includes("Your facilitator called Dr. Thomas Greer"));
+  assert.ok(texts.includes("Waiting on the veterinarian"));
+  assert.ok(texts.includes("Your facilitator wrote to you"), "migrated intro letter shows as a contact");
+  assert.equal(texts.at(-1), "You sent your request");
+  // assigning writes an Assigned row the owner sees
+  const fresh = await post("intake", "/api/intake", { name: "Pat Lee", email: "pat@example.org", vet_name: "Dr. Q", subject: "s", description: "d", a_legal: true, a_opd: true, a_fees: true, a_member: true, a_service: true, a_terms: true });
+  const id = (await fresh.json()).complaint;
+  await post("complaint", "/api/complaint/assign", { id, facilitator: IDS.fac }, EMAILS.staff);
+  const ownerView = await (await get("complaint", `/api/complaint?id=${id}`, "pat@example.org")).json();
+  assert.equal(ownerView.activity[0].text, "Dr. Priya Raman assigned as your facilitator");
+  assert.equal(ownerView.facilitator.region, "Hudson Valley");
+  assert.equal(ownerView.facilitator.email, undefined);
+});

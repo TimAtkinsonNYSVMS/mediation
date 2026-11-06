@@ -1,4 +1,4 @@
-/* Mediation portal redesign layer v01 (2026-11-06). From design/redesign/portal.css (Claude Design, NYSVMS Design System).
+/* Mediation portal redesign layer v02 (2026-11-06). v02: owner pages (avatar, file chips). v01 (2026-11-06). From design/redesign/portal.css (Claude Design, NYSVMS Design System).
    Scoped to .rd so pages move over one group at a time; old app.css styles stay for pages not yet redesigned.
    Rules: square buttons and inputs, 6px cards, 44px touch targets, words carry status meaning. */
 .rd { --navy: #0a5a85; --action: #0f7bb3; --rule: #e4e8ec; --soft: #f6f8f9; --body: #333333; --muted: #555555; --accent: #5778a2; --resilient: #2d7d9a;
@@ -155,5 +155,12 @@ main.rd-soft { background: var(--soft, #f6f8f9); }
 .rd .card { box-shadow: none; }
 .rd .row { gap: 0; }
 .rd .row.g4 { gap: 4px; } .rd .row.g8 { gap: 8px; } .rd .row.g12 { gap: 12px; } .rd .row.g16 { gap: 16px; } .rd .row.g24 { gap: 24px; } .rd .row.g32 { gap: 32px; }
+.rd .stack { gap: 0; }
+.rd .nowrap { flex-wrap: nowrap; }
 .rd .stack.g4 { gap: 4px; } .rd .stack.g8 { gap: 8px; } .rd .stack.g12 { gap: 12px; } .rd .stack.g16 { gap: 16px; } .rd .stack.g24 { gap: 24px; }
 .rd h1 { margin: 0; }
+
+/* owner pages (v02) */
+.rd .avatar { width: 40px; height: 40px; border-radius: 50%; background: #d6dfea; color: var(--navy); display: flex; align-items: center; justify-content: center; font-family: "Roboto", sans-serif; font-weight: 700; font-size: 14px; flex: none; }
+.rd .file { display: inline-flex; align-items: center; gap: 8px; font-family: "Roboto", sans-serif; font-weight: 500; font-size: 14px; padding: 8px 12px; border: 1px solid var(--rule); border-radius: 6px; background: #fff; color: var(--navy); min-height: 40px; }
+.rd .navy .btn.lg:hover { background: #d6dfea !important; }

@@ -1,4 +1,5 @@
-// Mediation portal app v03 (2026-11-06). v03: public pages redesigned (design/redesign 01-05, 24-25): About, 4-step request form, received, sign in with 6-box code.
+// Mediation portal app v04 (2026-11-06). v04: pet owner pages redesigned (06-09, 28) with the Activity list; updates record a Type and With.
+// v03 (2026-11-06). v03: public pages redesigned (design/redesign 01-05, 24-25): About, 4-step request form, received, sign in with 6-box code.
 // v02 (2026-11-04). v02: Admin page (#/admin, staff) and View as (read-only, 2 hours).
 // v01 (2026-11-04). Plain JS, hash routes:
 //   #/ (home: public about page, or the signed-in person's lists)   #/file (public complaint form)   #/signin
@@ -70,7 +71,7 @@ function tabsFor() {
   if (me.staff) t.push(["#/", "All requests"], ["#/facilitators", "Facilitators"], ["#/letters", "Letter templates"]);
   else if (me.viewing && !me.facilitator && !me.owner) t.push(["#/", "Home"]);
   else if (me.facilitator) t.push(["#/", "My assignments"], ["#/guide", "Facilitator guide"]);
-  else t.push(["#/", "My requests"]);
+  else t.push(["#/", "My requests"], ["#/about", "How mediation works"]);
   if (me.real && me.real.staff && !me.viewing) t.push(["#/admin", "Admin"]);
   return t;
 }
@@ -95,7 +96,7 @@ async function route() {
   try {
     if (parts[0] === "file") return fileForm();
     if (parts[0] === "signin") return signIn();
-    if (!me) return about();
+    if (parts[0] === "about" || !me) return about();
     if (parts[0] === "c" && parts[2] === "letter") return await letter(parts[1]);
     if (parts[0] === "c") return await complaint(parts[1]);
     if (parts[0] === "feedback") return await feedback(parts[1]);
@@ -402,6 +403,7 @@ function received(d) {
 let filter = "open";
 async function home() {
   const { mine, work } = await api("/api/complaints");
+  if (!me.staff && !me.facilitator) return ownerHome(mine);
   const parts = [];
   if (me.viewing && !me.viewing.can_sign_in) parts.push(el("div", { class: "note", text: `${me.name} can't sign in to the portal: they aren't an active facilitator or staff member, and they don't own a request. If they tried, they would only see the public pages.` }));
   if (me.staff || me.facilitator) {
@@ -458,12 +460,18 @@ async function complaint(id) {
   const back = el("a", { class: "btn-small", href: "#/", text: "← Back" });
   // Progress
   const note = el("textarea", { id: "nt", placeholder: "What happened, who you spoke to, what's next" });
+  const ntType = el("select", { id: "nt-type" }, [["Call", "Phone call"], ["Email", "Email"], ["Note", "Note to file (not shown to the owner)"]].map(([v, l]) => el("option", { value: v, text: l })));
+  const ntWith = el("select", { id: "nt-with" }, [["Owner", "The owner"], ["Veterinarian", "The veterinarian"], ["Other", "Someone else"]].map(([v, l]) => el("option", { value: v, text: l })));
+  const withWrap = el("div", {}, el("label", { for: "nt-with", text: "With" }), ntWith);
+  ntType.addEventListener("change", () => (withWrap.hidden = ntType.value === "Note"));
   const doc = el("input", { id: "nt-f", type: "file" });
-  const noteForm = el("div", { hidden: true, style: "margin-top:12px" }, el("label", { for: "nt", text: "Update" }), note, el("label", { for: "nt-f", text: "Attach a document (optional, up to 4 MB)" }), doc,
+  const noteForm = el("div", { hidden: true, style: "margin-top:12px" }, el("label", { for: "nt-type", text: "Type" }), ntType, withWrap,
+    el("p", { class: "hint", text: "Calls and emails with the owner or vet show on the owner's Activity list as one line, for example \"Your facilitator called Dr. Greer\". Your notes are never shown to the owner." }),
+    el("label", { for: "nt", text: "Update" }), note, el("label", { for: "nt-f", text: "Attach a document (optional, up to 4 MB)" }), doc,
     el("div", { class: "row", style: "margin-top:12px" }, el("button", { class: "btn", type: "button", text: "Save update", onclick: async (e) => {
       e.target.disabled = true;
       try {
-        const out = await post("/api/complaint/update", { id: c.id, notes: note.value });
+        const out = await post("/api/complaint/update", { id: c.id, notes: note.value, type: ntType.value, with: ntType.value === "Note" ? undefined : ntWith.value });
         const failed = doc.files.length ? await uploadFiles([...doc.files], { complaint: c.id, field: "update", update: out.update }) : [];
         toast(failed.length ? `Update saved, but ${failed.join(", ")} didn't upload` : "Update saved", failed.length > 0); route();
       } catch (err) { toast(err.message, true); e.target.disabled = false; }
@@ -523,16 +531,110 @@ async function complaint(id) {
       el("div", {}, people, statusPanel, resPanel, fb)));
 }
 
+// ---- pet owner pages (design/redesign 06-09, 28) ----
+const OWNER_PILL = { "Awaiting assignment": "p-attn", "Facilitator assigned": "p-info", "Mediation in progress": "p-info", "Waiting on the veterinarian": "p-wait", "Waiting for your reply": "p-wait", "Completed": "p-ok", "Withdrawn": "p-mute" };
+const ownerPill = (label, short) => el("span", { class: "pill " + (OWNER_PILL[label] || "p-info"), text: short && label === "Waiting on the veterinarian" ? "Waiting on the vet" : label });
+const vetName = (c) => (c.vet_name ? (/^dr\.?\s/i.test(c.vet_name) ? c.vet_name : `Dr. ${c.vet_name}`) : "the veterinarian");
+const vetShort = (c) => (c.vet_name ? `Dr. ${String(c.vet_name).replace(/^Dr\.?\s+/i, "").split(" ").pop()}` : "the veterinarian");
+function whatsHappening(c) {
+  const fac = c.facilitator ? (typeof c.facilitator === "string" ? c.facilitator : c.facilitator.name) : "";
+  switch (c.owner_status) {
+    case "Awaiting assignment": return "We are finding a volunteer veterinarian for your request. This usually takes up to two weeks. You don't need to do anything right now.";
+    case "Facilitator assigned": return `${fac || "Your facilitator"} will contact you directly by email or phone to talk it through.`;
+    case "Waiting on the veterinarian": return `${fac ? fac + ", your facilitator," : "Your facilitator"} has reached out to ${vetShort(c)} and is waiting for a reply. You don't need to do anything right now.`;
+    case "Waiting for your reply": return `${fac || "Your facilitator"} is waiting to hear from you. Please check your email and phone messages, or reply to their last message.`;
+    case "Mediation in progress": return `${fac || "Your facilitator"} is talking with ${vetShort(c)} about your concerns. They'll be in touch with you.`;
+    case "Withdrawn": return "This request was closed without a resolution. If something has changed, you can start a new request.";
+    default: return "";
+  }
+}
+function ownerSteps(status, labels = true) {
+  const idx = stepIndex(status);
+  return el("ol", { class: "steps", "aria-label": idx === 3 ? "Progress: all steps complete" : `Progress: step ${idx + 1} of 4` },
+    STEPS.map((t, i) => el("li", { class: i < idx || (idx === 3 && status === "Completed") ? "done" : i === idx ? "now" : "" }, el("span", { class: "bar" }), labels ? el("span", { class: "lab", text: t }) : null)));
+}
+const initials = (n) => String(n || "").replace(/^Dr\.?\s+/i, "").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0].toUpperCase()).join("");
+const avatar = (n) => el("span", { class: "avatar", "aria-hidden": "true", text: initials(n) });
+
+function ownerHome(mine) {
+  const open = mine.filter((c) => !CLOSED.includes(c.status)), closed = mine.filter((c) => CLOSED.includes(c.status));
+  const first = String(me.name || "").split(" ")[0];
+  const openCard = (c) => el("article", { class: "card stack", style: "gap:20px;margin-bottom:24px" },
+    el("div", { class: "row g12 between", style: "align-items:flex-start" },
+      el("div", { class: "stack g4", style: "min-width:0;flex:1 1 300px" }, el("span", { class: "sm muted", text: `Request #${c.n} · received ${fmtDate(c.received)}` }),
+        el("h3", { class: "t2" }, el("a", { href: `#/c/${c.id}`, style: "color:#0a5a85", text: c.subject || "Your request" })),
+        el("span", { class: "sm muted", text: `About ${vetName(c)}${c.practice ? ", " + c.practice : ""}` })),
+      ownerPill(c.owner_status)),
+    ownerSteps(c.status),
+    el("p", { class: "sm strong show-phone", text: `Step ${stepIndex(c.status) + 1} of 4: ${STEPS[stepIndex(c.status)]}` }),
+    el("div", { class: "alert a-info" }, ico("info"), el("span", {}, el("span", { class: "strong", text: "What's happening: " }), whatsHappening(c))),
+    el("div", { class: "row g12 between" },
+      c.facilitator ? el("span", { class: "row g12 nowrap" }, avatar(c.facilitator), el("span", { class: "stack" }, el("span", { class: "sm muted", text: "Your facilitator" }), el("span", { class: "strong", text: c.facilitator }))) : el("span"),
+      el("a", { class: "btn", href: `#/c/${c.id}`, text: "View request" })));
+  const closedCard = (c) => el("article", { class: "card stack", style: "gap:16px;margin-bottom:24px" },
+    el("div", { class: "row g12 between", style: "align-items:flex-start" },
+      el("div", { class: "stack g4", style: "min-width:0;flex:1 1 300px" }, el("span", { class: "sm muted", text: `Request #${c.n} · received ${fmtDate(c.received)}` }),
+        el("h3", { class: "t3", style: "font-size:20px" }, el("a", { href: `#/c/${c.id}`, style: "color:#0a5a85", text: c.subject || "Your request" })),
+        el("span", { class: "sm muted", text: `About ${vetName(c)}${c.facilitator ? " · Facilitator " + c.facilitator : ""}` })),
+      ownerPill(c.owner_status)),
+    c.resolution ? el("p", {}, el("span", { class: "strong", text: "Resolution: " }), c.resolution) : null,
+    el("div", { class: "row g12" }, c.can_feedback ? el("a", { class: "btn", href: `#/feedback/${c.id}`, text: "Tell us how it went" }) : null, el("a", { class: c.can_feedback ? "btnq" : "btn2", href: `#/c/${c.id}`, text: "View request" })));
+  showRd({},
+    me.viewing && !me.viewing.can_sign_in ? el("div", { class: "alert a-warn", style: "margin-bottom:24px" }, ico("info"), el("span", { text: `${me.name} can't sign in to the portal: they aren't an active facilitator or staff member, and they don't own a request.` })) : null,
+    el("div", { class: "row g16 between", style: "align-items:flex-end;margin-bottom:32px" },
+      el("div", { class: "stack g12" }, el("p", { class: "eyebrow", text: "My requests" }), el("h1", { class: "t1", text: first ? `Welcome back, ${first}` : "Welcome back" }),
+        el("p", { class: "muted", text: "Here is where each of your requests stands. Your facilitator will contact you directly by email or phone." })),
+      el("a", { class: "btn2 hide-phone", href: "#/file" }, "+ New request")),
+    open.length ? [el("h2", { class: "eyebrow", style: "margin-bottom:12px", text: `Open (${open.length})` }), open.map(openCard)] : null,
+    closed.length ? [el("h2", { class: "eyebrow", style: "margin:16px 0 12px", text: `Completed (${closed.length})` }), closed.map(closedCard)] : null,
+    !mine.length ? el("div", { class: "card soft stack g12" }, el("h2", { class: "t3", text: "No requests yet" }), el("p", { class: "muted", text: "When you request mediation, it will appear here." })) : null,
+    el("a", { class: "btn2 full show-phone", style: "margin-top:8px", href: "#/file", text: "Start a new request" }));
+}
+
 function ownerView(c) {
-  const parts = [el("a", { class: "btn-small", href: "#/", text: "← My requests" }),
-    el("p", { class: "eyebrow", style: "margin-top:14px", text: `Request #${c.n} · received ${fmtDate(c.received)}` }), el("h1", { text: c.subject || "Your request" }),
-    el("div", { class: "panel" }, el("div", { class: "row between" }, el("h2", { style: "margin:0", text: "Where it stands" }), statusChip(c.status)), steps(c.status),
-      c.facilitator ? el("p", {}, "Your facilitator: ", el("strong", { text: c.facilitator.name }), ". They will contact you directly.") : el("p", { class: "muted", text: "We are finding a volunteer veterinarian for your request." }),
-      c.status === "Completed" && c.resolution ? el("p", {}, el("strong", { text: "Resolution: " }), c.resolution) : null,
-      c.can_feedback ? el("a", { class: "btn", href: `#/feedback/${c.id}`, text: "Tell us how it went" }) : c.feedback_given ? el("p", { class: "note", text: "Thank you for your feedback." }) : null),
-    el("div", { class: "panel" }, el("h2", { text: "What you told us" }), el("p", { class: "muted small", text: `About ${c.vet_name}${c.practice ? ", " + c.practice : ""}` }), el("p", { class: "story", text: c.description }),
-      (c.uploads.length || c.release.length) ? el("div", { class: "files" }, c.uploads.map((f) => fileLink(c.id, f)), c.release.map((f) => fileLink(c.id, f))) : null)];
-  show(parts);
+  const done = c.status === "Completed";
+  const crumb = el("nav", { "aria-label": "Breadcrumb", class: "sm", style: "margin-bottom:16px" }, el("a", { href: "#/", text: "My requests" }), el("span", { class: "muted", text: ` / Request #${c.n}` }));
+  const head = el("div", { class: "stack g12", style: "margin-bottom:32px" },
+    el("div", { class: "row g12" }, ownerPill(c.owner_status), el("span", { class: "sm muted", text: `Request #${c.n} · received ${fmtDate(c.received)}` })),
+    el("h1", { class: "t1", text: c.subject || "Your request" }));
+  const kindIco = { sent: "check", assigned: "check", done: "check", status: "clock", contact: "info" };
+  const activity = (c.activity || []).length ? el("section", { class: "card", "aria-labelledby": "act" },
+    el("h2", { id: "act", class: "t2", style: "margin-bottom:20px", text: "Activity" }),
+    el("ol", { class: "tl" }, c.activity.map((a, i) => el("li", {}, el("span", { class: "dot" + (i === 0 && !done ? " now" : "") }, ico(kindIco[a.kind] || "check")),
+      el("div", { class: "tlbody" }, el("span", { class: "sm muted", text: fmtDate(a.date) }), el("span", { text: a.text })))))) : null;
+  const told = el("section", { class: "card stack g12", "aria-labelledby": "told" },
+    el("h2", { id: "told", class: done ? "t3" : "t2", text: "What you told us" }),
+    el("p", { class: "sm muted", text: `About ${vetName(c)}${c.practice ? ", " + c.practice : ""}` }),
+    el("p", { style: "white-space:pre-wrap;overflow-wrap:anywhere", text: c.description || "" }),
+    (c.uploads.length || c.release.length) ? el("div", { class: "row g8" }, [...c.uploads, ...c.release].map((f) => el("a", { class: "file", href: `/api/file?c=${c.id}&a=${f.id}`, target: "_blank", rel: "noopener", text: f.filename }))) : null);
+  const facCard = el("section", { class: "card stack g16", "aria-labelledby": "fac" },
+    el("h2", { id: "fac", class: "eyebrow", text: "Your facilitator" }),
+    c.facilitator ? el("div", { class: "row g12 nowrap" }, avatar(c.facilitator.name), el("span", { class: "stack" }, el("span", { class: "strong", text: c.facilitator.name }),
+      el("span", { class: "sm muted", text: `Volunteer veterinarian${c.facilitator.region ? " · " + c.facilitator.region : ""}` }))) : el("p", { class: "sm muted", text: "Not assigned yet. A volunteer veterinarian is usually assigned within two weeks." }),
+    c.facilitator && !done ? el("p", { class: "sm muted", text: "They'll contact you directly. Reply to their emails to add anything new." }) : null);
+  const help = el("section", { class: "card soft stack g8" }, el("h2", { class: "t3", text: done ? "Something else came up?" : "Need help?" }),
+    done ? el("p", { class: "sm muted" }, "You can ", el("a", { href: "#/file", text: "start a new request" }), `, or email `, el("a", { href: "mailto:staff@nysvms.org", text: "staff@nysvms.org" }), ` and mention request #${c.n}.`)
+      : el("p", { class: "sm muted" }, "Email ", el("a", { href: "mailto:staff@nysvms.org", text: "staff@nysvms.org" }), ` and mention request #${c.n}.`));
+  let mainCol;
+  if (done) {
+    mainCol = [
+      el("section", { class: "card stack fit", style: "gap:18px", "aria-labelledby": "res" }, el("h2", { id: "res", class: "eyebrow", text: "Resolution" }),
+        el("p", { style: "font-family:Roboto,sans-serif;font-size:24px;line-height:1.35;color:#0a5a85", text: c.resolution || "Your facilitator closed this request." }),
+        c.facilitator ? el("p", { class: "sm muted", text: `Recorded by your facilitator, ${c.facilitator.name}.` }) : null),
+      c.can_feedback ? el("section", { class: "navy row g24 between", "aria-labelledby": "fb" },
+        el("div", { class: "stack g8", style: "max-width:520px" }, el("h2", { id: "fb", class: "t3", style: "font-size:22px", text: "How did we do?" }),
+          el("p", { text: "Four quick questions. Your answers help us improve mediation for other pet owners." })),
+        el("a", { class: "btn lg", href: `#/feedback/${c.id}`, style: "background:#fff;color:#0a5a85", text: "Tell us how it went" }))
+        : c.feedback_given ? el("div", { class: "alert a-ok" }, ico("check"), el("span", { text: "Thank you for your feedback." })) : null,
+      el("section", { class: "card stack g16" }, el("h2", { class: "t3", text: "Progress" }), ownerSteps(c.status)),
+      activity, told];
+  } else {
+    mainCol = [
+      el("section", { class: "card stack", style: "gap:20px", "aria-labelledby": "ws" }, el("h2", { id: "ws", class: "t2", text: "Where it stands" }), ownerSteps(c.status),
+        el("p", {}, el("span", { class: "strong", text: "What's happening: " }), whatsHappening({ ...c, facilitator: c.facilitator?.name || "" }), c.status !== "Withdrawn" ? " When the request is completed you'll see the resolution here." : "")),
+      activity, told];
+  }
+  showRd({}, crumb, head, el("div", { class: "cols" }, el("div", { class: "colmain" }, mainCol), el("aside", { class: "colside" }, facCard, help)));
 }
 
 // ---- letters ----
@@ -565,7 +667,7 @@ async function letter(id) {
   };
   const save = async (e) => {
     e.target.disabled = true;
-    try { await post("/api/complaint/update", { id: c.id, notes: `Letter drafted to ${to.value}: ${subj.value}`, letter_type: templates[Number(pick.value)].type, letter_text: `Subject: ${subj.value}\n\n${body.value}` }); toast("Saved to progress"); location.hash = `#/c/${c.id}`; }
+    try { await post("/api/complaint/update", { id: c.id, notes: `Letter drafted to ${to.value}: ${subj.value}`, letter_type: templates[Number(pick.value)].type, with: templates[Number(pick.value)].recipient === "Owner" ? "Owner" : "Veterinarian", letter_text: `Subject: ${subj.value}\n\n${body.value}` }); toast("Saved to progress"); location.hash = `#/c/${c.id}`; }
     catch (err) { toast(err.message, true); e.target.disabled = false; }
   };
   show(el("a", { class: "btn-small", href: `#/c/${c.id}`, text: `← Back to #${c.n}` }),
@@ -578,31 +680,37 @@ async function letter(id) {
       el("div", { class: "note", text: "The portal never sends these letters. You review and send each one from your own email, so you stay the person the owner and veterinarian hear from. Files can't be linked for the vet, so attach them to your email." })));
 }
 
-// ---- feedback ----
+// ---- feedback (design/redesign 09) ----
 async function feedback(id) {
   const c = await api(`/api/complaint?id=${encodeURIComponent(id)}`);
   if (!c.can_feedback) { location.hash = `#/c/${id}`; return; }
   const val = { overall: 0, facilitator: 0, admin: 0, value: 0 };
-  const stars = (k) => {
-    const box = el("div", { class: "stars", role: "group" });
-    const draw = () => box.replaceChildren(...[1, 2, 3, 4, 5].map((i) => el("button", { type: "button", class: i <= val[k] ? "on" : "", "aria-label": `${i} of 5`, "aria-pressed": String(i === val[k]), text: "★", onclick: () => { val[k] = i; draw(); } })));
-    draw(); return box;
-  };
-  const comments = el("textarea", { id: "fb-c" });
+  const scale = (k, n, legend, lo, hi) => el("fieldset", { class: "fs" }, el("legend", { text: `${n}. ${legend}` }),
+    el("div", { class: "seg", role: "radiogroup" }, [1, 2, 3, 4, 5].map((i) => el("label", {}, (() => { const r = el("input", { type: "radio", name: "fb-" + k, value: String(i) }); r.addEventListener("change", () => (val[k] = i)); return r; })(), String(i)))),
+    el("div", { class: "row sm muted between", style: "max-width:356px" }, el("span", { text: lo }), el("span", { text: hi })));
+  const comments = el("textarea", { id: "fb-c", class: "textarea" });
   const msg = el("div");
-  const form = el("form", { class: "panel", style: "max-width:640px" },
-    el("label", { text: "Overall, how satisfied were you with the NYSVMS mediation process?" }), stars("overall"),
-    el("label", { text: "How satisfied were you with the support from your facilitator?" }), stars("facilitator"),
-    el("label", { text: "How satisfied were you with the support from the NYSVMS staff?" }), stars("admin"),
-    el("label", { text: "How valuable was this service to you?" }), stars("value"),
-    el("label", { for: "fb-c", text: "Anything that would help us improve the process" }), comments, msg,
-    el("div", { class: "row", style: "margin-top:16px" }, el("button", { class: "btn", type: "submit", text: "Send feedback" }), el("a", { class: "btn-outline", href: `#/c/${c.id}`, text: "Back" })));
+  const btn = el("button", { class: "btn lg", type: "submit", text: "Send feedback" });
+  const form = el("form", { class: "card stack", style: "gap:28px;padding:36px", novalidate: true },
+    scale("overall", 1, "Overall, how satisfied were you with the NYSVMS mediation process?", "Not satisfied", "Very satisfied"), el("hr", { class: "divider" }),
+    scale("facilitator", 2, "How satisfied were you with the support from your facilitator?", "Not satisfied", "Very satisfied"), el("hr", { class: "divider" }),
+    scale("admin", 3, "How satisfied were you with the support from the NYSVMS staff?", "Not satisfied", "Very satisfied"), el("hr", { class: "divider" }),
+    scale("value", 4, "How valuable was this service to you?", "Not valuable", "Very valuable"), el("hr", { class: "divider" }),
+    el("div", { class: "field" }, el("label", { for: "fb-c" }, "Anything that would help us improve the process?", el("span", { class: "opt", text: " (optional)" })), comments),
+    msg, el("div", { class: "row g12" }, btn, el("a", { class: "btnq", href: `#/c/${c.id}`, text: "Not now" })));
   form.addEventListener("submit", async (e) => {
     e.preventDefault(); msg.replaceChildren();
-    try { await post("/api/complaint/feedback", { id: c.id, ...val, comments: comments.value }); toast("Feedback sent. Thank you."); location.hash = `#/c/${c.id}`; }
-    catch (err) { msg.append(el("div", { class: "err", text: err.message })); }
+    if (!val.overall) { msg.append(el("div", { class: "alert a-attn", role: "alert" }, ico("alert"), el("span", { text: "Choose a rating for question 1, the overall process." }))); return; }
+    btn.disabled = true;
+    try { await post("/api/complaint/feedback", { id: c.id, ...Object.fromEntries(Object.entries(val).map(([k, v]) => [k, v || null])), comments: comments.value }); toast("Feedback sent. Thank you."); location.hash = `#/c/${c.id}`; }
+    catch (err) { msg.append(el("div", { class: "alert a-attn" }, ico("alert"), el("span", { text: err.message }))); btn.disabled = false; }
   });
-  show(el("p", { class: "eyebrow", text: `Request #${c.n}` }), el("h1", { text: "How did we do?" }), form);
+  showRd({},
+    el("div", { style: "max-width:860px" },
+      el("nav", { "aria-label": "Breadcrumb", class: "sm", style: "margin-bottom:16px" }, el("a", { href: "#/", text: "My requests" }), el("span", { class: "muted", text: " / " }), el("a", { href: `#/c/${c.id}`, text: `Request #${c.n}` }), el("span", { class: "muted", text: " / Feedback" })),
+      el("div", { class: "stack g12", style: "margin-bottom:32px" }, el("p", { class: "eyebrow", text: `Request #${c.n} · ${c.subject || ""}` }), el("h1", { class: "t1", text: "How did we do?" }),
+        el("p", { class: "muted", text: "Four quick ratings and an optional comment. About a minute." })),
+      form));
 }
 
 // ---- staff pages ----

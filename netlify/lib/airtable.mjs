@@ -34,7 +34,8 @@ export const TABLES = {
     fresh: true,
     fields: {
       fld8lFmpecZG7cdaQ: "n", fldj3FAAYKeGMKuhG: "complaint", fldvm1aIsRmvMO4EQ: "author", fldIucKCQWOnZp1Bi: "date",
-      fldm2HjE7PEN3hU0n: "notes", fldglDofWQ9vufOCk: "documents", fldi7g5q1MalmVyla: "letter_type", fldQeNqc0kHjt8Jki: "letter_text"
+      fldm2HjE7PEN3hU0n: "notes", fldglDofWQ9vufOCk: "documents", fldi7g5q1MalmVyla: "letter_type", fldQeNqc0kHjt8Jki: "letter_text",
+      fld3vGp10i4Rtbmjo: "type", fldobe9YSssCoqTED: "with", fldenMKQCNzFzAtS3: "status_set"
     }
   },
   adminlog: {

@@ -75,6 +75,11 @@ Knack's concatenation fields (owner email, phone and address, and facilitator st
 | Letter Text | `fldQeNqc0kHjt8Jki` | field_82 |
 | Visible to Owner (reserved, unused) | `fldxpgDTTJqplOBC9` | |
 | Knack ID | `fldBXhXqXp02JKC3o` | record id |
+| Type (Call / Email / Note / Letter / Status change / Assigned; added 2026-11-06) | `fld3vGp10i4Rtbmjo` | |
+| With (Owner / Veterinarian / Other) | `fldobe9YSssCoqTED` | |
+| Status Set (Status change: the new status; Assigned: the facilitator name) | `fldenMKQCNzFzAtS3` | |
+
+The owner Activity list (`ownerActivity` in netlify/lib/complaints.mjs) is built from Type, With and Status Set as fixed sentences. Notes and letter text are never sent to owners.
 
 ## Letter Templates `tbloGcnfTRAu5niHD` (7 rows, from Make scenario 2006069)
 

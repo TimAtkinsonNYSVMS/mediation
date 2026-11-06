@@ -1,4 +1,5 @@
-// Mediation portal domain v01 (2026-11-04). Shapes complaints for each kind of viewer, numbers new complaints,
+// Mediation portal domain v02 (2026-11-06). v02: owner-facing status names, "what's happening" text and the owner Activity list
+// (built here from fixed sentences, never from notes). v01 (2026-11-04). Shapes complaints for each kind of viewer, numbers new complaints,
 // and builds the notification emails that replaced the 5 Knack email rules (docs/phase2-portal-spec.md).
 import { env } from "./core.mjs";
 import { readTable, readByIds } from "./airtable.mjs";
@@ -8,6 +9,37 @@ import { notify } from "./mail.mjs";
 export const portalUrl = () => env("PORTAL_URL", "https://mediation.nysvms.org");
 const first = (a) => (Array.isArray(a) ? a[0] : a) || null;
 const files = (list) => (list || []).map((f) => ({ id: f.id, filename: f.filename, size: f.size || 0, type: f.type || "" }));
+
+// Owner-facing wording for the stored statuses (the stored values are renamed later, with the staff redesign).
+export const OWNER_STATUS = {
+  "Awaiting assignment": "Awaiting assignment", "Asking mediator to accept": "Awaiting assignment", "Mediator Assigned": "Facilitator assigned",
+  "Mediator waiting for owner to respond": "Waiting for your reply", "Mediator waiting for veterinarian to respond": "Waiting on the veterinarian",
+  "Mediation in progress": "Mediation in progress", "Completed": "Completed", "Withdrawn": "Withdrawn"
+};
+export const ownerStatus = (s) => OWNER_STATUS[s || "Awaiting assignment"] || s;
+const firstName = (n) => String(n || "").replace(/^Dr\.?\s+/i, "Dr. ");
+
+// The owner's Activity list: dated, fixed sentences. Notes, letter text and anything with "Other" are never included.
+export function ownerActivity(c, updates, people) {
+  const vet = c.vet_name ? (/^dr\.?\s/i.test(c.vet_name) ? c.vet_name : `Dr. ${c.vet_name}`) : "the veterinarian";
+  const out = [{ date: c.received, kind: "sent", text: "You sent your request" }];
+  for (const u of updates) {
+    const who = firstName(people.get(first(u.author))?.name) || "Your facilitator";
+    const lt = String(u.letter_type || "").toLowerCase();
+    let kind = null, text = null;
+    if (u.type === "Assigned") { kind = "assigned"; text = `${u.status_set || "A volunteer veterinarian"} assigned as your facilitator`; }
+    else if (u.type === "Status change" && u.status_set) { kind = u.status_set === "Completed" ? "done" : "status"; text = u.status_set === "Completed" ? "Your request was completed" : ownerStatus(u.status_set); }
+    else if ((u.type === "Call" || u.type === "Email") && u.with === "Owner") { kind = "contact"; text = `${who} ${u.type === "Call" ? "called" : "emailed"} you`; }
+    else if ((u.type === "Call" || u.type === "Email") && u.with === "Veterinarian") { kind = "contact"; text = `Your facilitator ${u.type === "Call" ? "called" : "emailed"} ${vet}`; }
+    else if (u.type === "Letter" || lt) {
+      const to = u.with || (/animal owner|complainant|owner/.test(lt) ? "Owner" : /veterinarian/.test(lt) ? "Veterinarian" : "");
+      if (to === "Owner") { kind = "contact"; text = "Your facilitator wrote to you"; }
+      else if (to === "Veterinarian") { kind = "contact"; text = `Your facilitator wrote to ${vet}`; }
+    }
+    if (text) out.push({ date: u.date, kind, text });
+  }
+  return out.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+}
 
 export async function peopleById() {
   return new Map((await readTable("people")).map((p) => [p.id, p]));
@@ -21,6 +53,7 @@ export function listItem(c, people, view) {
     vet_name: c.vet_name || "", practice: c.practice || "", facilitator: fac ? fac.name : "",
     last_activity: c.last_update || (c.received || "").slice(0, 10)
   };
+  if (view === "owner") { item.owner_status = ownerStatus(item.status); if (c.status === "Completed") { item.resolution = c.resolution || ""; item.can_feedback = !c.fb_date; } }
   if (view === "full") {
     const owner = people.get(first(c.owner));
     item.owner = owner ? owner.name : "";
@@ -43,10 +76,14 @@ export async function detail(me, c) {
     can_feedback: can(me, "feedback", c), feedback_given: !!c.fb_date
   };
   if (c.status === "Completed") base.resolution = c.resolution || "";
-  if (view === "owner") return base;
-  const updates = (await readByIds("updates", c.updates)).map((u) => {
+  const raw = await readByIds("updates", c.updates);
+  if (view === "owner") {
+    if (fac) base.facilitator.region = fac.region || "";
+    return { ...base, owner_status: ownerStatus(base.status), activity: ownerActivity(c, raw, people) };
+  }
+  const updates = raw.map((u) => {
     const a = people.get(first(u.author));
-    return { id: u.id, n: u.n, date: u.date, author: a ? a.name : "", notes: u.notes || "", letter_type: u.letter_type || "", letter_text: u.letter_text || "", documents: files(u.documents) };
+    return { id: u.id, n: u.n, date: u.date, author: a ? a.name : "", notes: u.notes || "", letter_type: u.letter_type || "", letter_text: u.letter_text || "", documents: files(u.documents), type: u.type || "", with: u.with || "" };
   }).sort((a, b) => String(b.date).localeCompare(String(a.date)) || (b.n || 0) - (a.n || 0));
   return {
     ...base,
