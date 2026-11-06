@@ -41,7 +41,8 @@ export function ownerActivity(c, updates, people) {
     }
     if (text) out.push({ date: u.date, kind, text });
   }
-  return out.sort((a, b) => String(b.date).localeCompare(String(a.date)));
+  // Newest first; on a tie (same timestamp) "You sent your request" stays at the bottom, where it happened.
+  return out.map((a, i) => ({ ...a, i })).sort((a, b) => String(b.date).localeCompare(String(a.date)) || b.i - a.i).map(({ i, ...a }) => a);
 }
 
 export async function peopleById() {
