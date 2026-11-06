@@ -17,7 +17,7 @@ globalThis.fetch = async (url, opts) => {
 
 const { sessionCookie } = await import("../netlify/lib/core.mjs");
 const routes = [];
-for (const f of ["auth-session", "auth-code", "complaints", "complaint", "intake", "upload", "file", "templates", "facilitators", "admin"]) {
+for (const f of ["auth-session", "auth-code", "complaints", "complaint", "intake", "upload", "file", "templates", "facilitators", "admin", "sso"]) {
   const mod = await import(`../netlify/functions/${f}.mjs`);
   for (const p of [].concat(mod.config.path)) routes.push([p.endsWith("/*") ? new RegExp("^" + p.slice(0, -2) + "/[^/]+$") : p, mod.default]);
 }

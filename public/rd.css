@@ -322,3 +322,7 @@ main.rd-soft { background: var(--soft, #f6f8f9); }
   .rd .reqform .steps li { gap: 4px; }
 }
 .rd .qrow:not(:has(.help)) .seg { grid-row: 1; }
+
+/* sign-in: "or" divider before the NYSVMS account button (v07) */
+.rd .ordiv { display: flex; align-items: center; gap: 12px; font: 700 12px/1 "Roboto", sans-serif; letter-spacing: .12em; text-transform: uppercase; color: var(--muted); }
+.rd .ordiv::before, .rd .ordiv::after { content: ""; flex: 1; height: 1px; background: var(--rule); }

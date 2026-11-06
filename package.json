@@ -5,7 +5,7 @@
   "type": "module",
   "description": "NYSVMS NYSVMS Mediation Portal (replaces the Knack complaints app)",
   "scripts": {
-    "test": "node --test test/api.test.mjs test/admin.test.mjs test/pages.test.mjs",
+    "test": "node --test test/api.test.mjs test/admin.test.mjs test/sso.test.mjs test/pages.test.mjs",
     "dev": "node test/dev-server.mjs"
   }
 }

@@ -1,4 +1,5 @@
-// Mediation portal app v09 (2026-11-06). v09: request form step 1 fits above the fold (question and answers on one line on computers)
+// Mediation portal app v10 (2026-11-06). v10: "Sign in with your NYSVMS account" (Novi) for facilitators and staff, beside the emailed code.
+// v09 (2026-11-06). v09: request form step 1 fits above the fold (question and answers on one line on computers)
 // and the answer buttons are coloured by meaning (green = we can help, red = another organization, amber = not sure).
 // v08 (2026-11-06). v08: staff pages redesigned (15-22, 26): Requests with Needs attention, duplicate and stalled warnings,
 // assign with suggestions, Close without resolution, Facilitators, Letter templates, People and access. New stored status names.
@@ -98,7 +99,7 @@ async function route() {
   renderHeader();
   try {
     if (parts[0] === "file") return fileForm();
-    if (parts[0] === "signin") return signIn();
+    if (parts[0] === "signin") return signIn(parts[1]);
     if (parts[0] === "about" || !me) return about();
     if (parts[0] === "c" && parts[2] === "letter") return await letter(parts[1]);
     if (parts[0] === "c") return await complaint(parts[1]);
@@ -221,9 +222,23 @@ function about() {
 
 // Sign in: email, then a 6-box code (paste fills all six).
 let signinEmail = "";
-function signIn() {
+// Why a Novi sign-in came back here (netlify/functions/sso.mjs).
+const SSO_MSG = {
+  "sso-noaccess": "Your NYSVMS account worked, but its email isn't set up in the mediation portal. Use the emailed code below with the email NYSVMS has for you as a facilitator, or email staff@nysvms.org.",
+  "sso-cancelled": "Signing in with your NYSVMS account was cancelled. You can try again, or use the emailed code.",
+  "sso-expired": "That sign-in took too long or was started in another window. Please try again.",
+  "sso-failed": "We couldn't sign you in with your NYSVMS account just now. Please use the emailed code instead.",
+  "sso-off": "Signing in with an NYSVMS account isn't switched on yet. Please use the emailed code."
+};
+let ssoEnabled = null;
+function signIn(reason) {
   if (me) { location.hash = "#/"; return; }
   const msg = el("div");
+  const sso = el("div", { class: "stack g12", hidden: !ssoEnabled },
+    el("div", { class: "ordiv" }, el("span", { text: "Facilitators and staff" })),
+    el("a", { class: "btn2 lg full", href: "/api/auth/sso-start" }, "Sign in with your NYSVMS account"),
+    el("p", { class: "sm muted", text: "Uses your nysvms.org member login. Pet owners, please use the emailed code." }));
+  if (ssoEnabled === null) api("/api/auth/sso").then((r) => { ssoEnabled = !!r.enabled; sso.hidden = !ssoEnabled; }).catch(() => {});
   const email = el("input", { id: "si-email", class: "input", type: "email", autocomplete: "email", placeholder: "you@example.com", value: signinEmail });
   const btn = el("button", { class: "btn lg full", type: "submit", text: "Email me a code" });
   const form = el("form", { class: "stack g16", novalidate: true },
@@ -239,7 +254,8 @@ function signIn() {
     el("div", { class: "card stack g24 signin-card", style: "width:100%;max-width:480px;padding:40px" },
       el("div", { class: "stack g12" }, el("p", { class: "eyebrow", text: "Sign in" }), el("h1", { class: "t1", style: "font-size:32px", text: "We'll email you a code" }),
         el("p", { class: "muted", text: "No password to remember. Use the email from your mediation request, or the email NYSVMS has for you as a facilitator or staff member." })),
-      form, el("hr", { class: "divider" }),
+      SSO_MSG[reason] ? el("div", { class: "alert a-attn", role: "alert" }, ico("alert"), el("span", { text: SSO_MSG[reason] })) : null,
+      form, sso, el("hr", { class: "divider" }),
       el("p", { class: "sm muted" }, "Don't have a request yet? ", el("a", { href: "#/file", text: "Start a request" })))));
   email.focus();
 }
