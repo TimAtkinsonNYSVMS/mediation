@@ -1,3 +1,4 @@
+// Mediation portal app v13 (2026-11-06). v13: a My assignments tab for staff who are also facilitators (#/mine).
 // Mediation portal app v12 (2026-11-06). v12: the records release form (redesigned, fillable PDF) can be downloaded where it is uploaded.
 // Mediation portal app v11 (2026-11-06). v11: a "new portal" note under the menu for facilitators and staff, with a button to email Tim.
 // Mediation portal app v10 (2026-11-06). v10: "Sign in with your NYSVMS account" (Novi) for facilitators and staff, beside the emailed code.
@@ -74,7 +75,7 @@ async function uploadFiles(files, extra) {
 function tabsFor() {
   if (!me) return [["#/", "About"], ["#/file", "Request mediation"], ["#/signin", "Sign in"]];
   const t = [];
-  if (me.staff) t.push(["#/", "Requests"], ["#/facilitators", "Facilitators"], ["#/letters", "Letter templates"]);
+  if (me.staff) t.push(["#/", "Requests"], ...(me.facilitator ? [["#/mine", "My assignments"]] : []), ["#/facilitators", "Facilitators"], ["#/letters", "Letter templates"]);
   else if (me.viewing && !me.facilitator && !me.owner) t.push(["#/", "Home"]);
   else if (me.facilitator) t.push(["#/", "My assignments"], ["#/guide", "Facilitator guide"]);
   else t.push(["#/", "My requests"], ["#/about", "How mediation works"]);
@@ -110,6 +111,7 @@ async function route() {
     if (parts[0] === "facilitators") return await facilitatorList();
     if (parts[0] === "letters") return await letterList();
     if (parts[0] === "guide") return guide();
+    if (parts[0] === "mine") return await mine();
     if (parts[0] === "admin" && parts[1] === "new") return await adminPerson(null);
     if (parts[0] === "admin" && parts[1] === "p") return await adminPerson(parts[2]);
     if (parts[0] === "admin") return await admin();
@@ -473,6 +475,13 @@ async function home() {
   if (!me.staff && !me.facilitator) return ownerHome(mine);
   if (!me.staff) return facHome(work, mine);
   return staffHome(work);
+}
+
+// Staff who also facilitate see their own assignments the way a facilitator does (#/mine).
+async function mine() {
+  if (!me.staff || !me.facilitator) { location.hash = "#/"; return; }
+  const { work } = await api("/api/complaints");
+  return facHome(work.filter((c) => c.assigned_to_me), []);
 }
 
 // ---- staff pages (design/redesign 15-22, 26) ----

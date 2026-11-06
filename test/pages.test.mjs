@@ -114,4 +114,7 @@ test("pages: staff requests, request, facilitators, templates and people", { ski
   await check("#/admin", "People and access");
   await check("#/admin/new", "Add a person");
   await check("#/admin/p/recPPL00000000003", "Their requests");
+  // staff who also facilitate get My assignments (the test staff member has both roles)
+  await check("#/mine", "My assignments");
+  assert.ok(await js(`return [...document.querySelectorAll("nav.tabs a")].some((a) => a.textContent === "My assignments")`), "the tab shows");
 });
