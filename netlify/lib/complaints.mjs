@@ -1,4 +1,5 @@
-// Mediation portal domain v02 (2026-11-06). v02: owner-facing status names, "what's happening" text and the owner Activity list
+// Mediation portal domain v03 (2026-11-06). v03: next_step in staff/facilitator lists and detail.
+// v02 (2026-11-06). v02: owner-facing status names, "what's happening" text and the owner Activity list
 // (built here from fixed sentences, never from notes). v01 (2026-11-04). Shapes complaints for each kind of viewer, numbers new complaints,
 // and builds the notification emails that replaced the 5 Knack email rules (docs/phase2-portal-spec.md).
 import { env } from "./core.mjs";
@@ -58,6 +59,7 @@ export function listItem(c, people, view) {
     const owner = people.get(first(c.owner));
     item.owner = owner ? owner.name : "";
     item.region = fac?.region || "";
+    item.next_step = c.next_step || "";
   }
   return item;
 }
@@ -83,13 +85,13 @@ export async function detail(me, c) {
   }
   const updates = raw.map((u) => {
     const a = people.get(first(u.author));
-    return { id: u.id, n: u.n, date: u.date, author: a ? a.name : "", notes: u.notes || "", letter_type: u.letter_type || "", letter_text: u.letter_text || "", documents: files(u.documents), type: u.type || "", with: u.with || "" };
+    return { id: u.id, n: u.n, date: u.date, author: a ? a.name : "", notes: u.notes || "", letter_type: u.letter_type || "", letter_text: u.letter_text || "", documents: files(u.documents), type: u.type || "", with: u.with || "", status_set: u.status_set || "" };
   }).sort((a, b) => String(b.date).localeCompare(String(a.date)) || (b.n || 0) - (a.n || 0));
   return {
     ...base,
     owner: owner ? { name: owner.name || "", email: owner.email || "", phone: owner.phone || "", address: owner.address || "" } : null,
     facilitator: fac ? { id: fac.id, name: fac.name || "", email: fac.email || "", region: fac.region || "" } : null,
-    vet_email: c.vet_email || "", practice_address: c.practice_address || "",
+    vet_email: c.vet_email || "", practice_address: c.practice_address || "", next_step: c.next_step || "",
     attestations: { member: !!c.a_member, legal: !!c.a_legal, opd: !!c.a_opd, fees: !!c.a_fees, service: !!c.a_service, terms: !!c.a_terms },
     resolution: c.resolution || "", resolution_notes: c.resolution_notes || "",
     feedback: c.fb_date ? { date: c.fb_date, overall: c.fb_overall, value: c.fb_value, facilitator: c.fb_facilitator, admin: c.fb_admin, comments: c.fb_comments || "" } : null,

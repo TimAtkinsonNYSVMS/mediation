@@ -1,4 +1,5 @@
-// Mediation portal Airtable access v02 (2026-11-04). v02: Admin Log table; People "active" etc. used by the Admin page.
+// Mediation portal Airtable access v03 (2026-11-06). v03: Mediation Requests "Next step"; Progress Updates Type/With/Status Set.
+// Was v02 (2026-11-04). v02: Admin Log table; People "active" etc. used by the Admin page.
 // Was v01 (2026-11-04). Field IDs, never names (see docs/airtable.md).
 // Base "Complaints Mediation". People and Letter Templates are cached for 60 seconds per function instance;
 // Complaints and Progress Updates are always read fresh.
@@ -26,7 +27,7 @@ export const TABLES = {
       fld5c7WytBfZRJdMG: "uploads", fldPpBXyG3eRyGRi0: "release", fldDZZMVNVTayS2dC: "resolution", fldCwzyS6IxW5Wc1G: "resolution_notes",
       fldW8uipeCU9zBKGo: "fb_date", fldAK4HIVK3mOAAYs: "fb_overall", fldXs9UGqSVLyuVd8: "fb_value", flddQcVoT2wAhu6ul: "fb_facilitator",
       fldZ7eJTGBYf38ydY: "fb_admin", fld9Vnqur9xRama69: "fb_comments", fldMkDgrqPfO1Omc1: "updates", fldPQQLEbqW7o9ey1: "last_update",
-      fldV2V8jO2Ncrnizz: "source"
+      fldV2V8jO2Ncrnizz: "source", fldUo8RrnkHHwM6s0: "next_step"
     }
   },
   updates: {

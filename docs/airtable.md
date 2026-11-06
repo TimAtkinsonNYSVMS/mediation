@@ -49,6 +49,7 @@ One row per email address. A person can hold several roles: for example, Katie S
 | Records Release Form (attachments) | `fldPpBXyG3eRyGRi0` | field_25 |
 | Resolution | `fldDZZMVNVTayS2dC` | field_63 |
 | Resolution Notes | `fldCwzyS6IxW5Wc1G` | field_62 |
+| Next step (facilitator's next step, shown on My assignments; cleared by Close request; added 2026-11-06) | `fldUo8RrnkHHwM6s0` | |
 | Form Completed By | `fldkFRh6jGXrSV8Hx` | field_86 |
 | Feedback Date | `fldW8uipeCU9zBKGo` | field_71 |
 | Feedback Overall (1–5) | `fldAK4HIVK3mOAAYs` | field_72 (Knack allowed half stars: round up) |

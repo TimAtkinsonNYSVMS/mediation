@@ -203,3 +203,33 @@ test("owner Activity: fixed sentences only, never notes; status changes and assi
   assert.equal(ownerView.facilitator.region, "Hudson Valley");
   assert.equal(ownerView.facilitator.email, undefined);
 });
+
+test("facilitator tools: status and next step in the same save, vet email, close in one step", async () => {
+  const NEXT = "fldUo8RrnkHHwM6s0", VET_EMAIL = "fldjTlxd3X4FG2uKs";
+  // update + status + next step together
+  let r = await post("complaint", "/api/complaint/update", { id: IDS.cMine, notes: "Spoke with the practice manager.", type: "Call", with: "Veterinarian", status: "Mediation in progress", next_step: "Follow up with Dr. Greer" }, EMAILS.fac);
+  assert.equal(r.status, 200);
+  const c = complaintRow(IDS.cMine);
+  assert.deepEqual([c.fields[F.C.status], c.fields[NEXT]], [{ name: "Mediation in progress" }, "Follow up with Dr. Greer"]);
+  assert.equal(RECORDS.tblzyvyYFymTo4xR6.at(-1).fields.fldenMKQCNzFzAtS3, "Mediation in progress");
+  assert.equal((await post("complaint", "/api/complaint/update", { id: IDS.cMine, notes: "x", status: "Completed" }, EMAILS.fac)).status, 400, "completing goes through Close request");
+  assert.equal((await post("complaint", "/api/complaint/update", { id: IDS.cMine, notes: "x", status: "Awaiting assignment" }, EMAILS.fac)).status, 400);
+  // next step shows in the facilitator's list, never to the owner
+  const list = (await (await get("complaints", "/api/complaints", EMAILS.fac)).json()).work;
+  assert.equal(list.find((x) => x.id === IDS.cMine).next_step, "Follow up with Dr. Greer");
+  assert.equal((await (await get("complaint", `/api/complaint?id=${IDS.cMine}`, EMAILS.owner)).json()).next_step, undefined);
+  // vet email: validated and lowercased
+  assert.equal((await post("complaint", "/api/complaint/vet_email", { id: IDS.cMine, email: "not an email" }, EMAILS.fac)).status, 400);
+  assert.equal((await post("complaint", "/api/complaint/vet_email", { id: IDS.cMine, email: "x@y.org" }, EMAILS.owner)).status, 403);
+  assert.equal((await post("complaint", "/api/complaint/vet_email", { id: IDS.cMine, email: " TGreer@Riverbend.Example " }, EMAILS.fac)).status, 200);
+  assert.equal(complaintRow(IDS.cMine).fields[VET_EMAIL], "tgreer@riverbend.example");
+  // close: needs a resolution; sets Completed, clears the next step; the owner then sees the resolution
+  assert.equal((await post("complaint", "/api/complaint/close", { id: IDS.cMine, resolution: " " }, EMAILS.fac)).status, 400);
+  assert.equal((await post("complaint", "/api/complaint/close", { id: IDS.cMine, resolution: "x" }, EMAILS.owner)).status, 403);
+  assert.equal((await post("complaint", "/api/complaint/close", { id: IDS.cMine, resolution: "The clinic apologised and refunded the exam fee.", resolution_notes: "Both sides satisfied." }, EMAILS.fac)).status, 200);
+  const done = complaintRow(IDS.cMine);
+  assert.deepEqual([done.fields[F.C.status], done.fields[NEXT]], [{ name: "Completed" }, undefined]);
+  const o = await (await get("complaint", `/api/complaint?id=${IDS.cMine}`, EMAILS.owner)).json();
+  assert.equal(o.resolution, "The clinic apologised and refunded the exam fee.");
+  assert.equal(o.activity[0].text, "Your request was completed");
+});
