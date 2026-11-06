@@ -1,3 +1,4 @@
+// Mediation portal app v12 (2026-11-06). v12: the records release form (redesigned, fillable PDF) can be downloaded where it is uploaded.
 // Mediation portal app v11 (2026-11-06). v11: a "new portal" note under the menu for facilitators and staff, with a button to email Tim.
 // Mediation portal app v10 (2026-11-06). v10: "Sign in with your NYSVMS account" (Novi) for facilitators and staff, beside the emailed code.
 // v09 (2026-11-06). v09: request form step 1 fits above the fold (question and answers on one line on computers)
@@ -299,6 +300,7 @@ function codeStep() {
 }
 
 // Request mediation: four steps, answers kept in `req` while moving between them.
+const RELEASE_FORM = "/assets/nysvms-release-form.pdf";
 const REQ_STEPS = ["Check we can help", "Your veterinarian", "What happened", "About you"];
 let req = null;
 const newReq = () => ({ step: 0, legal: "", opd: "", fees: "", member: "", service: false, terms: false, vet_name: "", practice: "", practice_address: "", vet_email: "",
@@ -364,7 +366,11 @@ function fileForm(keep) {
       input("description", "What happened", { area: true, ph: "When was the visit? What were you told? What would you like to understand?" }),
       filePicker("uploads", "Records, photos or other documents", true),
       check("records_ok", el("span", { class: "stack g4" }, el("span", { text: "I give my veterinarian permission to share my pet's records with NYSVMS." }), el("span", { class: "sm muted", text: "Helps your facilitator understand the care." }))),
-      filePicker("release", "Signed records release form", false)];
+      el("div", { class: "stack g8" },
+        el("div", { class: "alert a-info" }, ico("info"), el("span", {}, "To let your facilitator see your pet's records, ",
+          el("a", { class: "strong", href: RELEASE_FORM, download: "NYSVMS-permission-to-release-pet-records.pdf" }, "download the release form (PDF)"),
+          ", fill it in, sign it and add it below. You can type into it, or print it and sign by hand. A signed note giving your vet permission works too.")),
+        filePicker("release", "Signed records release form", false))];
   } else {
     title = "About you"; intro = "We use your email to send your confirmation and to let you sign in later. No account or password needed.";
     body = [input("name", "Your name", { ac: "name" }), input("email", "Email", { type: "email", ac: "email" }), input("phone", "Phone", { type: "tel", ac: "tel", optional: true }),

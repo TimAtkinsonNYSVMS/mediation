@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Permission to release pet records</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,400;0,700;1,400&family=Roboto:wght@400;500;700&display=swap">
+<style>
+  @page { size: 8.5in 11in; margin: 0; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body { width: 8.5in; height: 11in; font-family: "Lato", Arial, sans-serif; color: #333; font-size: 10.5pt; line-height: 1.45; position: relative; }
+  .band { background: #0a5a85; height: 0.95in; display: flex; align-items: center; justify-content: space-between; padding: 0 0.6in; }
+  .band img { height: 0.55in; display: block; }
+  .band .prod { font: 700 9pt "Roboto", sans-serif; letter-spacing: .18em; text-transform: uppercase; color: #d6dfea; }
+  .page { padding: 0.32in 0.6in 0; }
+  .eyebrow { font: 700 8.5pt "Roboto", sans-serif; letter-spacing: .16em; text-transform: uppercase; color: #5778a2; margin: 0 0 4px; }
+  h1 { font: 500 22pt/1.15 "Roboto", sans-serif; color: #0a5a85; margin: 0; }
+  .lede { font-style: italic; color: #5778a2; font-size: 11pt; margin: 6px 0 0; max-width: 6.4in; }
+  h2 { font: 700 9pt "Roboto", sans-serif; letter-spacing: .14em; text-transform: uppercase; color: #0a5a85; margin: 0 0 6px; display: flex; align-items: center; gap: 8px; }
+  h2 .n { width: 18px; height: 18px; border-radius: 50%; background: #0f7bb3; color: #fff; display: inline-flex; align-items: center; justify-content: center; font-size: 8.5pt; letter-spacing: 0; }
+  section { margin-top: 0.17in; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 14px; }
+  .full { grid-column: 1 / -1; }
+  .fld label { display: block; font: 500 8.5pt "Roboto", sans-serif; color: #555; margin: 0 0 2px; }
+  .fld label .opt { font-weight: 400; color: #777; }
+  .box { height: 0.3in; border: 1px solid #8a96a3; background: #fff; }
+  .perm { margin-top: 0.17in; border: 2px solid #0a5a85; border-radius: 6px; padding: 12px 14px 12px; background: #f6f8f9; }
+  .perm p { margin: 0 0 10px; font-size: 11pt; }
+  .sig .box { height: 0.42in; }
+  .about { margin-top: 0.18in; border-top: 1px solid #e4e8ec; padding-top: 10px; font-size: 9pt; color: #555; }
+  .about h3 { font: 700 9pt "Roboto", sans-serif; color: #0a5a85; margin: 0 0 3px; }
+  .about p { margin: 0; }
+  .foot { position: absolute; left: 0; right: 0; bottom: 0; height: 0.42in; background: #f6f8f9; border-top: 1px solid #e4e8ec; display: flex; align-items: center; justify-content: center; font: 400 8pt "Lato", sans-serif; color: #555; gap: 10px; }
+  .foot b { color: #0a5a85; font-weight: 700; }
+</style>
+</head>
+<body>
+  <div class="band"><img src="logo.png" alt="New York State Veterinary Medical Society"><span class="prod">Mediation service</span></div>
+  <div class="page">
+    <p class="eyebrow">Mediation request form</p>
+    <h1>Permission to release pet records</h1>
+    <p class="lede">Fill this in, sign it and upload it with your mediation request at mediation.nysvms.org. Your facilitator will share it with your veterinarian. You can type into this form, or print it and fill it in by hand.</p>
+
+    <section>
+      <h2><span class="n">1</span>Your veterinarian</h2>
+      <div class="grid">
+        <div class="fld"><label>Veterinarian's name</label><div class="box" data-field="vet_name"></div></div>
+        <div class="fld"><label>Practice or hospital</label><div class="box" data-field="practice"></div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="n">2</span>About you</h2>
+      <div class="grid">
+        <div class="fld"><label>Your name</label><div class="box" data-field="owner_name"></div></div>
+        <div class="fld"><label>Phone <span class="opt">(optional)</span></label><div class="box" data-field="owner_phone"></div></div>
+        <div class="fld full"><label>Your address</label><div class="box" data-field="owner_address_1"></div></div>
+        <div class="fld full"><div class="box" data-field="owner_address_2"></div></div>
+        <div class="fld"><label>Email <span class="opt">(optional)</span></label><div class="box" data-field="owner_email"></div></div>
+        <div class="fld"><label>Mediation request number <span class="opt">(if you know it)</span></label><div class="box" data-field="request_number"></div></div>
+      </div>
+    </section>
+
+    <section>
+      <h2><span class="n">3</span>Your pet</h2>
+      <div class="grid">
+        <div class="fld"><label>Pet's name</label><div class="box" data-field="pet_name"></div></div>
+        <div class="fld"><label>Type of animal <span class="opt">(dog, cat, horse...)</span></label><div class="box" data-field="pet_type"></div></div>
+      </div>
+    </section>
+
+    <div class="perm">
+      <h2><span class="n">4</span>Your permission</h2>
+      <p>I give permission for the veterinarian named above to release the medical records for the pet named above to the facilitator appointed by the New York State Veterinary Medical Society who is helping to resolve the concerns I have about recent treatment, using the NYSVMS mediation service.</p>
+      <div class="grid sig" style="grid-template-columns: 2fr 1fr">
+        <div class="fld"><label>Signed</label><div class="box" data-field="signature"></div></div>
+        <div class="fld"><label>Date</label><div class="box" data-field="date"></div></div>
+      </div>
+    </div>
+
+    <div class="about">
+      <h3>About the NYSVMS mediation service</h3>
+      <p>The NYSVMS mediation service helps coordinate a resolution to a concern you may have with a veterinarian who is a member of NYSVMS. You should first try to discuss your concerns with your veterinarian, but sometimes a third party is needed to help foster a resolution. We do not take disciplinary action; that is handled by the NY State Office of the Professions. We do not negotiate financial settlements. Many clients have found it valuable to talk with us about what happened, and in nearly all the cases we handle we are able to address the concerns brought to us.</p>
+    </div>
+  </div>
+  <div class="foot"><b>New York State Veterinary Medical Society</b><span>300 Great Oaks Blvd., Suite 314, Albany, NY 12203</span><span>staff@nysvms.org</span><span>(518) 869-7867</span></div>
+</body>
+</html>
