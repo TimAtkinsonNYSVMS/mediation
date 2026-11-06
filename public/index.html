@@ -1,5 +1,5 @@
 <!doctype html>
-<!-- Mediation portal page v03 (2026-11-06). v03: redesign header logo and rd.css. v02 (2026-11-04). v02: NYSVMS favicon (animal medallion from the logo, same files as the volunteer portal). -->
+<!-- Mediation portal page v04 (2026-11-06). v04: bigger logo, link to nysvms.org in the header and footer. v03 (2026-11-06). v03: redesign header logo and rd.css. v02 (2026-11-04). v02: NYSVMS favicon (animal medallion from the logo, same files as the volunteer portal). -->
 <html lang="en">
 <head>
   <meta charset="utf-8">
@@ -23,12 +23,15 @@
         <img class="logo" src="/assets/nysvms-logo-on-dark.png" alt="New York State Veterinary Medical Society">
         <span class="brand-label">Mediation</span>
       </a>
-      <div class="who" id="who"></div>
+      <div class="util-r">
+        <a class="site-link" href="https://nysvms.org/" target="_blank" rel="noopener">nysvms.org<span aria-hidden="true"> &#8599;</span><span class="vh"> (opens in a new tab)</span></a>
+        <div class="who" id="who"></div>
+      </div>
     </div>
   </header>
   <nav class="tabs" aria-label="Sections"><div class="in" id="tabs"></div></nav>
   <main><div class="in main-in" id="main" aria-live="polite"><p class="small">Loading…</p></div></main>
-  <footer class="foot"><div class="in foot-in"><span>New York State Veterinary Medical Society</span><span>Questions? Email <a href="mailto:staff@nysvms.org">staff@nysvms.org</a></span></div></footer>
+  <footer class="foot"><div class="in foot-in"><a href="https://nysvms.org/" target="_blank" rel="noopener">New York State Veterinary Medical Society</a><span>Questions? Email <a href="mailto:staff@nysvms.org">staff@nysvms.org</a></span></div></footer>
   <div class="toast" id="toast" role="status" hidden></div>
 </body>
 </html>

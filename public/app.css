@@ -1,4 +1,4 @@
-/* Mediation portal styles v03 (2026-11-06). v03: header, tabs and footer match design/redesign/portal.css. v02: View as bar. Same tokens as the volunteer and treasurer portals (nysvms-design-standards). */
+/* Mediation portal styles v04 (2026-11-06). v04: logo 52px (40px on phones) so the name is legible; nysvms.org link in the header. v03 (2026-11-06). v03: header, tabs and footer match design/redesign/portal.css. v02: View as bar. Same tokens as the volunteer and treasurer portals (nysvms-design-standards). */
 :root {
   --blue-1: #5778a2; --blue-2: #0f7bb3; --blue-deep: #0a5a85; --blue-soft: #d6dfea; --blue-wash: #e8f1f8;
   --ink: #333333; --ink-2: #555555; --bg: #ffffff; --bg-2: #f6f8f9; --rule: #e4e8ec; --line: #c9d2db;
@@ -143,3 +143,13 @@ nav.tabs a[aria-current="page"] { color: var(--blue-deep); }
 .foot-in { display: flex; flex-wrap: wrap; gap: 8px 24px; font-size: 14px; color: var(--ink-2); padding-block: 28px; }
 main.rd-soft { background: #f6f8f9; }
 @media (max-width: 760px) { .util-in { min-height: 60px; } .logo { height: 30px; } .brand { gap: 10px; } .brand-label { padding-left: 10px; } }
+
+/* v04: bigger logo, nysvms.org link */
+.logo { height: 52px; }
+.util-in { min-height: 80px; }
+.util-r { display: flex; align-items: center; flex-wrap: wrap; gap: 8px 24px; }
+.site-link { font: 500 15px var(--roboto); color: #fff; text-decoration: underline; text-underline-offset: 3px; display: inline-flex; align-items: center; min-height: 44px; }
+.site-link:hover { color: #d6dfea; }
+.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.foot-in a { color: inherit; }
+@media (max-width: 760px) { .logo { height: 40px; } .util-in { min-height: 64px; } .util-r { gap: 4px 16px; } }

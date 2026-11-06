@@ -1,4 +1,5 @@
-// Mediation portal app v05 (2026-11-06). v05: facilitator pages redesigned (10-14, 27): My assignments with next step, request workspace,
+// Mediation portal app v06 (2026-11-06). v06: About NYSVMS section on the home page.
+// v05 (2026-11-06). v05: facilitator pages redesigned (10-14, 27): My assignments with next step, request workspace,
 // log an update (type, with, next step, optional status), Close request, add the vet's email, Draft a letter with Open in my email and Log as sent.
 // v04 (2026-11-06). v04: pet owner pages redesigned (06-09, 28) with the Activity list; updates record a Type and With.
 // v03 (2026-11-06). v03: public pages redesigned (design/redesign 01-05, 24-25): About, 4-step request form, received, sign in with 6-box code.
@@ -172,6 +173,16 @@ function about() {
         el("h2", { class: "t3", style: "font-size:20px", text: "Please know before you start" }),
         el("p", { text: "We have no connection to the State licensing board and cannot impose penalties or remove licenses." }),
         el("p", { text: "We can only help when the veterinarian is a member of NYSVMS." }))),
+    el("section", { class: "card soft row g32", style: "margin-bottom:56px;align-items:flex-start", "aria-labelledby": "nysvms" },
+      el("div", { class: "stack g12", style: "flex:2 1 420px;min-width:0" },
+        el("p", { class: "eyebrow", text: "About NYSVMS" }),
+        el("h2", { id: "nysvms", class: "t2", text: "Who we are" }),
+        el("p", { text: "The New York State Veterinary Medical Society (NYSVMS) is a nonprofit professional association for veterinarians across New York State. It was founded by veterinarians, is led by veterinarians, and has served New York veterinarians since 1890 through 12 regional chapters." }),
+        el("p", { text: "Mediation is a free service the Society offers to the public. Volunteer veterinarians who are NYSVMS members help pet owners understand the care their animal received and share their concerns with the treating veterinarian." })),
+      el("div", { class: "stack g12", style: "flex:1 1 280px;min-width:0" },
+        el("p", { class: "lede", text: "“Leading the veterinary profession in New York State through education, advancement and protection of animal wellness, public health and veterinary medicine.”" }),
+        el("span", { class: "sm muted", text: "The NYSVMS mission" }),
+        extLink({ label: "Learn more at nysvms.org", href: "https://nysvms.org/about-us-2/" }))),
     el("section", { style: "margin-bottom:56px", "aria-labelledby": "how" },
       el("h2", { id: "how", class: "t2", style: "margin-bottom:24px", text: "How it works" }),
       el("ol", { class: "grid3" },
