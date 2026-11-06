@@ -1222,6 +1222,9 @@ async function stopViewing() {
 }
 
 // ---- start ----
+// Netlify copies the query onto a function redirect, so after a Novi sign-in the spent ?code=&state= would sit in the
+// address bar (and go out in the next Referer). Keep only the path and the hash route.
+if (location.search) history.replaceState(null, "", location.pathname + location.hash);
 (async () => {
   try { me = await fetch("/api/auth/session", { credentials: "same-origin" }).then((r) => (r.ok ? r.json() : null)); } catch { me = null; }
   route();
