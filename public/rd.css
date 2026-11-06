@@ -281,3 +281,44 @@ main.rd-soft { background: var(--soft, #f6f8f9); }
 @media (max-width: 760px) { .rd .search { max-width: none; margin-left: 0; } }
 .rd .linkbtn.sm { font-size: 14px; }
 @media (max-width: 760px) { .rd .tbl.stackable tr { width: auto; } .rd .tbl.stackable { width: 100%; table-layout: fixed; } }
+
+/* request form step 1: compact rows and bold answer buttons (v06) */
+.rd .reqform { gap: 20px; }
+.rd .reqform .t1 { font-size: 34px; }
+.rd .stack.g16 { gap: 16px; }
+.rd .qlist { border-top: 1px solid var(--rule); }
+.rd .qrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; column-gap: 24px; row-gap: 2px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--rule); }
+.rd .qrow .qtext { grid-column: 1; font: 500 16px/1.35 "Roboto", sans-serif; color: var(--body); }
+.rd .qrow .help { grid-column: 1; font-size: 13px; line-height: 1.4; }
+.rd .qrow .seg { grid-column: 2; grid-row: 1 / span 2; justify-content: flex-end; flex-wrap: nowrap; }
+.rd .seg.bold label { min-width: 76px; min-height: 44px; border: 2px solid var(--action); color: var(--navy); font-weight: 700; background: #fff; }
+.rd .seg.bold label:hover { background: #e6f1f8; }
+.rd .seg.bold label:has(input:checked)::before { content: "\2713"; margin-right: 6px; font-weight: 700; }
+.rd .seg.bold label.ok:has(input:checked) { background: #1f7a3a; border-color: #1f7a3a; color: #fff; }
+.rd .seg.bold label.stop:has(input:checked) { background: #c62828; border-color: #c62828; color: #fff; }
+.rd .seg.bold label.maybe:has(input:checked) { background: #ffc93c; border-color: #e0a800; color: #2b2100; }
+.rd .checks { gap: 12px; }
+.rd .checks .choice { padding: 10px 14px; font-size: 15px; }
+@media (max-width: 760px) {
+  .rd .qrow { grid-template-columns: minmax(0, 1fr); row-gap: 8px; padding: 14px 0; }
+  .rd .qrow .seg { grid-column: 1; grid-row: auto; justify-content: flex-start; flex-wrap: wrap; }
+  .rd .reqform .t1 { font-size: 28px; }
+}
+/* step 1 fits a 1366x768 laptop (v06b) */
+@media (min-width: 761px) {
+  .rd-wrap:has(.reqform) { padding-top: 24px; }
+  .rd .reqform { gap: 14px; }
+  .rd .reqform .t1 { font-size: 30px; }
+  .rd .qrow { padding: 6px 0; }
+  .rd .seg.bold label { min-height: 38px; min-width: 70px; }
+  .rd .checks .choice { padding: 8px 12px; }
+  .rd .checks .choice > .stack { flex-direction: row; flex-wrap: wrap; align-items: baseline; column-gap: 10px; }
+  .rd .checks details.terms summary { font-size: 14px; }
+}
+@media (min-width: 761px) {
+  .rd-wrap:has(.reqform) { padding-top: 16px; }
+  .rd .reqform { gap: 12px; }
+  .rd .reqform > .stack.g8 { gap: 4px; }
+  .rd .reqform .steps li { gap: 4px; }
+}
+.rd .qrow:not(:has(.help)) .seg { grid-row: 1; }

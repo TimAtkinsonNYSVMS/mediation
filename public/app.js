@@ -1,4 +1,6 @@
-// Mediation portal app v08 (2026-11-06). v08: staff pages redesigned (15-22, 26): Requests with Needs attention, duplicate and stalled warnings,
+// Mediation portal app v09 (2026-11-06). v09: request form step 1 fits above the fold (question and answers on one line on computers)
+// and the answer buttons are coloured by meaning (green = we can help, red = another organization, amber = not sure).
+// v08 (2026-11-06). v08: staff pages redesigned (15-22, 26): Requests with Needs attention, duplicate and stalled warnings,
 // assign with suggestions, Close without resolution, Facilitators, Letter templates, People and access. New stored status names.
 // v07 (2026-11-06). v07: home page restyled to Tim's mockup (full-width bands). v06: About NYSVMS section on the home page.
 // v05 (2026-11-06). v05: facilitator pages redesigned (10-14, 27): My assignments with next step, request workspace,
@@ -292,10 +294,13 @@ function fileForm(keep) {
     n.value = req[id]; n.addEventListener("input", () => { req[id] = n.value; n.removeAttribute("aria-invalid"); });
     return el("div", { class: "field" }, el("label", { for: id }, label, opts.optional ? el("span", { class: "opt", text: " (optional)" }) : null), n, opts.help ? el("span", { class: "help", text: opts.help }) : null);
   };
+  // One question per row: the question (and any hint) on the left, answer buttons on the right; stacked on phones.
+  // Each answer is coloured by what it means once chosen: ok (green), stop (red), maybe (amber).
   const yesNo = (key, legend, choices, help) => {
-    const name = "q-" + key;
-    return el("fieldset", { class: "fs" }, el("legend", { text: legend }),
-      el("div", { class: "seg", role: "radiogroup" }, choices.map(([v, l]) => el("label", {}, (() => { const r = el("input", { type: "radio", name, value: v }); r.checked = req[key] === v; r.addEventListener("change", () => { req[key] = v; fileForm(true); }); return r; })(), l))),
+    const name = "q-" + key, qid = "qt-" + key;
+    return el("div", { class: "qrow", role: "radiogroup", "aria-labelledby": qid },
+      el("span", { id: qid, class: "qtext", text: legend }),
+      el("div", { class: "seg bold" }, choices.map(([v, l, tone]) => el("label", { class: tone }, (() => { const r = el("input", { type: "radio", name, value: v }); r.checked = req[key] === v; r.addEventListener("change", () => { req[key] = v; fileForm(true); }); return r; })(), l))),
       help || null);
   };
   const check = (key, content) => { const c = el("input", { type: "checkbox", id: "cb-" + key }); c.checked = req[key]; c.addEventListener("change", () => { req[key] = c.checked; }); return el("label", { class: "choice", for: "cb-" + key }, c, content); };
@@ -321,14 +326,16 @@ function fileForm(keep) {
   let body, title, intro;
   if (s === 0) {
     title = "First, let's check we can help"; intro = "Answer these honestly. If mediation isn't the right fit, we'll point you somewhere that is.";
-    body = [yesNo("legal", "Have you taken any legal action about this?", [["yes", "Yes"], ["no", "No"]]), el("hr", { class: "divider" }),
-      yesNo("opd", "Have you complained to the NYS Office of Professional Discipline?", [["yes", "Yes"], ["no", "No"]]), el("hr", { class: "divider" }),
-      yesNo("fees", "Is your concern about fees or the cost of services?", [["yes", "Yes"], ["no", "No"]], el("p", { class: "help", text: "If it is, a consumer protection organization can help. We can't review what a practice charges." })), el("hr", { class: "divider" }),
-      yesNo("member", "Is the veterinarian a member of NYSVMS?", [["yes", "Yes"], ["no", "No"], ["unsure", "I'm not sure"]], el("p", { class: "help", text: req.member === "unsure" ? "That's fine. Carry on and our staff will check before a facilitator is assigned." : "Not sure? Ask the practice, or choose I'm not sure and our staff will check." })),
-      referral(), el("hr", { class: "divider" }),
-      el("div", { class: "stack g12" },
+    body = [el("div", { class: "qlist" },
+      yesNo("legal", "Have you taken any legal action about this?", [["yes", "Yes", "stop"], ["no", "No", "ok"]]),
+      yesNo("opd", "Have you complained to the NYS Office of Professional Discipline?", [["yes", "Yes", "stop"], ["no", "No", "ok"]]),
+      yesNo("fees", "Is your concern about fees or the cost of services?", [["yes", "Yes", "stop"], ["no", "No", "ok"]]),
+      yesNo("member", "Is the veterinarian a member of NYSVMS?", [["yes", "Yes", "ok"], ["no", "No", "stop"], ["unsure", "I'm not sure", "maybe"]],
+        req.member === "unsure" ? el("span", { class: "help", text: "That's fine. Our staff will check before a facilitator is assigned." }) : null)),
+      referral(),
+      el("div", { class: "grid2 checks" },
         check("service", el("span", { class: "stack g4" }, el("span", { text: "I have read how this service works." }), el("details", { class: "terms" }, el("summary", { text: "How this service works" }), el("div", {}, SERVICE_TEXT.map((t) => el("p", { text: t })))))),
-        check("terms", el("span", { class: "stack g4" }, el("span", { text: "I have read and accept the terms, including the indemnity." }), el("details", { class: "terms" }, el("summary", { text: "Read the terms" }), el("div", {}, TERMS_TEXT.map((t) => el("p", { text: t })))))))];
+        check("terms", el("span", { class: "stack g4" }, el("span", { text: "I accept the terms, including the indemnity." }), el("details", { class: "terms" }, el("summary", { text: "Read the terms" }), el("div", {}, TERMS_TEXT.map((t) => el("p", { text: t })))))))];
   } else if (s === 1) {
     title = "Your veterinarian"; intro = "Tell us who you saw. Your facilitator uses this to contact them.";
     body = [input("vet_name", "Veterinarian's name", { ph: "Dr. Lee Park" }), input("practice", "Practice name", { optional: true }), input("practice_address", "Practice address", { optional: true }),
@@ -359,14 +366,14 @@ function fileForm(keep) {
   const backLabel = s === 0 ? "Back to About" : "Back";
   const nextBtns = [];
   const mkNext = (cls, label) => { const b = el("button", { class: cls, type: "button", disabled: blocked, onclick: () => go(1) }, label, s < 3 ? ico("right") : null); nextBtns.push(b); return b; };
-  const navDesktop = el("div", { class: "row g12 between formnav", style: "margin-top:8px" }, el("button", { class: "btnq", type: "button", onclick: () => go(-1) }, ico("left"), backLabel), mkNext("btn lg", nextLabel));
+  const navDesktop = el("div", { class: "row g12 between formnav" }, el("button", { class: "btnq", type: "button", onclick: () => go(-1) }, ico("left"), backLabel), mkNext("btn lg", nextLabel));
   const navPhone = el("div", { class: "stickybar" }, el("button", { class: "btn2", type: "button", text: "Back", onclick: () => go(-1) }), mkNext("btn", s < 3 ? "Continue" : "Submit request"));
   showRd({ keep },
     el("div", { class: "cols", style: "gap:48px" },
-      el("div", { class: "colmain", style: "gap:28px;flex-basis:640px" },
-        el("div", { class: "stack g12" }, el("p", { class: "eyebrow", text: `Request mediation · Step ${s + 1} of 4` }), el("h1", { class: "t1", text: title }), el("p", { class: "muted", text: intro })),
+      el("div", { class: "colmain reqform", style: "flex-basis:640px" },
+        el("div", { class: "stack g8" }, el("h1", { class: "t1", text: title }), el("p", { class: "muted", text: intro })),
         steps,
-        el("form", { class: "stack g24", novalidate: true, onsubmit: (e) => { e.preventDefault(); go(1); } }, body, msg, navDesktop)),
+        el("form", { class: "stack " + (s === 0 ? "g16" : "g24"), novalidate: true, onsubmit: (e) => { e.preventDefault(); go(1); } }, body, msg, navDesktop)),
       el("aside", { class: "colside hide-phone", style: "flex-basis:320px;position:sticky;top:24px" },
         el("div", { class: "card soft stack g16" }, el("h2", { class: "t3", text: "What you'll need" }),
           el("ul", { class: "stack g8 sm", style: "margin:0;padding-left:18px" },
