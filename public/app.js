@@ -1,3 +1,4 @@
+// Mediation portal app v11 (2026-11-06). v11: a "new portal" note under the menu for facilitators and staff, with a button to email Tim.
 // Mediation portal app v10 (2026-11-06). v10: "Sign in with your NYSVMS account" (Novi) for facilitators and staff, beside the emailed code.
 // v09 (2026-11-06). v09: request form step 1 fits above the fold (question and answers on one line on computers)
 // and the answer buttons are coloured by meaning (green = we can help, red = another organization, amber = not sure).
@@ -83,6 +84,7 @@ function renderHeader() {
   const who = $("who");
   who.replaceChildren();
   viewBar();
+  newPortalBar();
   if (me) {
     const role = me.staff ? "Staff" : me.facilitator ? "Facilitator" : me.owner ? "Pet owner" : "No access";
     who.append(...[el("span", { class: "pill", text: role }), el("span", { class: "name", text: me.name }),
@@ -1202,6 +1204,17 @@ async function feedback(id) {
 }
 
 // ---- View as ----
+// A note for facilitators and staff while they move over from the old Knack portal (Tim, 2026-11-06).
+const FEEDBACK_TO = "tatkinson@nysvms.org";
+function newPortalBar() {
+  let bar = $("newbar");
+  if (!me || !(me.staff || me.facilitator)) { if (bar) bar.remove(); return; }
+  if (!bar) { bar = el("div", { id: "newbar", class: "newbar", role: "note" }); document.querySelector("nav.tabs").after(bar); }
+  const mail = `mailto:${FEEDBACK_TO}?subject=${encodeURIComponent("Mediation portal: question or request")}&body=${encodeURIComponent(`Page: ${location.href}\n\n`)}`;
+  bar.replaceChildren(el("div", { class: "in newbar-in" },
+    el("span", {}, el("strong", { text: "This is the new mediation portal." }), " It replaces the old Knack system. Questions, problems or ideas? Tim would like to hear them."),
+    el("a", { class: "newbar-btn", href: mail, text: "Email Tim" })));
+}
 function viewBar() {
   let bar = $("viewbar");
   if (!me || !me.viewing) { if (bar) bar.remove(); return; }

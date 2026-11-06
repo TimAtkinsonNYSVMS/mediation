@@ -153,3 +153,10 @@ main.rd-soft { background: #f6f8f9; }
 .vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 .foot-in a { color: inherit; }
 @media (max-width: 760px) { .logo { height: 40px; } .util-in { min-height: 64px; } .util-r { gap: 4px 16px; } }
+
+/* v05: "new portal" note for facilitators and staff */
+.newbar { background: #e6f1f8; border-bottom: 1px solid #b9d6ea; color: #0a3f5e; }
+.newbar-in { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 20px; padding-block: 10px; font-size: 15px; line-height: 1.45; }
+.newbar-btn { font: 700 14px var(--roboto); background: #0a5a85; color: #fff !important; text-decoration: none; padding: 0 16px; min-height: 40px; display: inline-flex; align-items: center; white-space: nowrap; }
+.newbar-btn:hover { background: #0f7bb3; }
+@media (max-width: 760px) { .newbar-in { font-size: 14px; } }
